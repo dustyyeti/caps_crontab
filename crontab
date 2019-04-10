@@ -1,0 +1,17 @@
+#######################################
+# DESCRIPTION
+# lights off sends serial messages directly to the arduino
+# scan.sh handles all the scanning, and "should" no longer print garbage.
+# transfer.sh handles the backup processes seperately from the other scripts, just in case
+######################################
+
+# light colors can be modifed in the lights.sh script
+# To determine a timeframe, go to corntab.com
+
+sp=/home/caps/scripts/rad/
+
+res=400
+ref=100
+exp=/home/caps/scripts/rad/myCoolExperiment
+
+*/5 * * * * $sp/scan.sh $ref $exp 2>&1 | tee -a $exp/LOG; $sp/lights.sh off 2>&1 | tee -a $exp/LOG; $sp/scan.sh $res $exp 2>&1 | tee -a $exp/LOG; $sp/lights.sh on 2>&1 | tee -a $exp/LOG; $sp/transfer.sh $exp 2>&1 | tee -a $exp/LOG
