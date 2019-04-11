@@ -14,13 +14,14 @@ fi
 
 EXPERIMENT_BASENAME=${LOCAL_DIR##*/}
 SCAN_FILENAME=$EXPERIMENT_BASENAME_R$RESOLUTION
-SCANNER_LIST=$(scanimage -f "%d%n")
+#SCANNER_LIST=$(scanimage -f "%d%n")
 
 date
 echo "Scanners:"
 echo "$SCANNER_LIST"
 echo "Experiment \"$EXPERIMENT_BASENAME\" will be stored in $LOCAL_DIR"
 echo "----------------------------------------------------------------"
+
 for scanner in $SCANNER_LIST; do
     scanner_safename=${scanner//:/_}
     FILENAME=$SCAN_FILENAME_$scanner_safename.R$RESOLUTION.$ENUM.tiff
