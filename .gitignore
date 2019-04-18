@@ -1,1 +1,3 @@
+# ignore all directories, which are assumed to be experiment directories
+
 */*
