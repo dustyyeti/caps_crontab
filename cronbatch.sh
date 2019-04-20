@@ -5,12 +5,18 @@
 #c. crontab $tmpfile
 #d. rm $tmpfile //optional
 
+
 SP="/home/caps/scripts/caps_cronscan/"
 EXP=$1
 RES=$2
 REF=$3
 
 EP=$SP+"/"+$EXP
+
+# Create experiment direcotry if it doesn't already exist
+if [ ! -d "$EP" ]; then
+    mkdir -p $EP
+fi
 
 crontab -l > $EP/crontab.old
 
