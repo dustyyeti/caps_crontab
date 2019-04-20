@@ -10,7 +10,7 @@ EXP=$1
 RES=$2
 REF=$3
 
-EP=SP+"/"+EXP
+EP=$SP+"/"+$EXP
 
 crontab -l > $EP/crontab.old
 
