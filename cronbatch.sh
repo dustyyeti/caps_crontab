@@ -5,17 +5,25 @@
 #c. crontab $tmpfile
 #d. rm $tmpfile //optional
 
+SP="/home/caps/scripts/caps_cronscan/"
+EXP=$1
+RES=$2
+REF=$3
+
+EP=SP+"/"+EXP
+
 crontab -l > crontab.old
 
 echo "#programatic crontab file generated for CAPS scanner control
 #
-#" > xtab
+#" > $EP/xtab
 
-echo "sp=/home/caps/scripts/caps_cronscan/
+echo "
+sp=$SP
 
-res=400
-ref=100
-exp=/home/caps/scripts/caps_cronscan/exp0000
+res=$2
+ref=$3
+exp=/home/caps/scripts/caps_cronscan/$1
 
 */5 * * * * $sp/scan.sh $ref $exp 2>&1 | tee -a $exp/LOG; \
 $sp/lights.sh off 2>&1 | tee -a $exp/LOG; \
@@ -23,6 +31,6 @@ $sp/scan.sh $res $exp 2>&1 | tee -a $exp/LOG; \
 $sp/lights.sh on 2>&1 | tee -a $exp/LOG; \
 $sp/transfer.sh $exp 2>&1 | tee -a $exp/LOG; \
 $sp/count.sh $exp 2>&1 | tee -a $exp/LOG
-" >> xtab
+" >> $EP/xtab
 
-crontab xtab
+crontab $EP/xtab
