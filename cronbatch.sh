@@ -5,7 +5,11 @@
 #c. crontab $tmpfile
 #d. rm $tmpfile
 
-crontab -l > xtab
+crontab -l > crontab.old
+
+echo "#programatic crontab file generated for CAPS scanner control
+#
+#" > xtab
 
 echo "sp=/home/caps/scripts/caps_cronscan/
 
