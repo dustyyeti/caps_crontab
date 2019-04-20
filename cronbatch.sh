@@ -11,7 +11,7 @@ EXP=$1
 RES=$2
 REF=$3
 
-EP=$SP+"/"+$EXP
+EP=$SP$EXP
 
 # Create experiment direcotry if it doesn't already exist
 if [ ! -d "$EP" ]; then
