@@ -3,7 +3,7 @@
 # a. crontab -l > $tmpfile
 #b. edit $tmpfile
 #c. crontab $tmpfile
-#d. rm $tmpfile
+#d. rm $tmpfile //optional
 
 crontab -l > crontab.old
 
@@ -24,3 +24,5 @@ $sp/lights.sh on 2>&1 | tee -a $exp/LOG; \
 $sp/transfer.sh $exp 2>&1 | tee -a $exp/LOG; \
 $sp/count.sh $exp 2>&1 | tee -a $exp/LOG
 " >> xtab
+
+crontab xtab
