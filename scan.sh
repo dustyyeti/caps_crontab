@@ -29,6 +29,9 @@ for scanner in $SCANNER_LIST; do
     echo "Saving as $FILENAME"
 
     scanimage -d $scanner --resolution $RESOLUTION --mode Color --format tiff > $LOCAL_DIR/$FILENAME
+    sleep 6s
 done
+
+
 
 # echo $ENUM > $LOCAL_DIR/count
