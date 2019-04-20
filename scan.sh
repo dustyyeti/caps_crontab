@@ -31,4 +31,4 @@ for scanner in $SCANNER_LIST; do
     scanimage -d $scanner --resolution $RESOLUTION --mode Color --format tiff > $LOCAL_DIR/$FILENAME
 done
 
-echo $ENUM > $LOCAL_DIR/count
+# echo $ENUM > $LOCAL_DIR/count
