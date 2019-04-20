@@ -12,7 +12,7 @@ REF=$3
 
 EP=SP+"/"+EXP
 
-crontab -l > crontab.old
+crontab -l > $EP/crontab.old
 
 echo "#programatic crontab file generated for CAPS scanner control
 #
