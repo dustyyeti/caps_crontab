@@ -28,7 +28,7 @@ for scanner in $SCANNER_LIST; do
     echo "Scanning on $scanner"
     echo "Saving as $FILENAME"
 
-    scanimage -d $scanner --resolution $RESOLUTION --mode Color --format tiff > $LOCAL_DIR/$FILENAME
+    scanimage -d $scanner --mode Color --format tiff --resolution $RESOLUTION > $LOCAL_DIR/$FILENAME
     sleep 6s
 done
 
