@@ -4,6 +4,7 @@ export SANE_USB_WORKAROUND=1
 
 RESOLUTION=$1
 LOCAL_DIR=$2
+DELAY=$3
 
 ENUM=$(($(cat $LOCAL_DIR/count)+1))
 
@@ -29,7 +30,8 @@ for scanner in $SCANNER_LIST; do
     echo "Saving as $FILENAME"
 
     scanimage -d $scanner --mode Color --format tiff --resolution $RESOLUTION > $LOCAL_DIR/$FILENAME
-    sleep 6s
+    echo "deay for $DELAY seconds"
+    sleep $DELAY
 done
 
 
