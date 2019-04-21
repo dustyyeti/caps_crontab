@@ -7,11 +7,11 @@
 
 
 SP="/home/caps/scripts/caps_cronscan/"
-EXP=$1
+EXPNAME=$1
 RES=$2
 REF=$3
 
-EP=$SP$EXP
+EP=$SP$EXPNAME
 
 # Create experiment direcotry if it doesn't already exist
 if [ ! -d "$EP" ]; then
@@ -25,18 +25,12 @@ echo "#programatic crontab file generated for CAPS scanner control
 #" > $EP/xtab
 
 echo "
-sp=$SP
-
-res=$2
-ref=$3
-exp=/home/caps/scripts/caps_cronscan/$1
-
-*/5 * * * * $sp/scan.sh $ref $exp 2>&1 | tee -a $exp/LOG; \
-$sp/lights.sh off 2>&1 | tee -a $exp/LOG; \
-$sp/scan.sh $res $exp 2>&1 | tee -a $exp/LOG; \
-$sp/lights.sh on 2>&1 | tee -a $exp/LOG; \
-$sp/transfer.sh $exp 2>&1 | tee -a $exp/LOG; \
-$sp/count.sh $exp 2>&1 | tee -a $exp/LOG
+*/5 * * * * $SP/scan.sh $ref $EP 2>&1 | tee -a $EP/LOG; \
+$SP/lights.sh off 2>&1 | tee -a $EP/LOG; \
+$SP/scan.sh $res $EP 2>&1 | tee -a $EP/LOG; \
+$SP/lights.sh on 2>&1 | tee -a $EP/LOG; \
+$SP/transfer.sh $EP 2>&1 | tee -a $EP/LOG; \
+$SP/count.sh $EP 2>&1 | tee -a $EP/LOG
 " >> $EP/xtab
 
 crontab $EP/xtab
