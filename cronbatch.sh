@@ -11,6 +11,7 @@ EXPNAME=$1
 RES=$2
 REF=$3
 DELAY=$4
+INT=$5
 
 EP=$SP$EXPNAME
 
@@ -26,7 +27,7 @@ echo "#programatic crontab file generated for CAPS scanner control
 #" > $EP/xtab
 
 echo "
-*/5 * * * * \
+*/$INT * * * * \
 $SP/scan.sh $ref $EP $DELAY 2>&1 | tee -a $EP/LOG; \
 $SP/lights.sh off 2>&1 | tee -a $EP/LOG; \
 $SP/scan.sh $res $EP $DELAY 2>&1 | tee -a $EP/LOG; \
