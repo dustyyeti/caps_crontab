@@ -104,22 +104,33 @@ echo "working with Directory $EP"
 
 echo "# programatic crontab file generated for CAPS scanner control
 #
-#" > $EP/xtab
+# ==============
+# Experiment Job: $EXP
+#
+" > $EP/xtab
+
+for ((i=0;i<lKeys;i++)) #$lKeys;i++))
+do
+	printf "%31s" "#" "${BLURBS[$i]}: " >> $EP/xtab
+	echo ${!ARGS[$i]} >> $EP/xtab
+done
+
+echo "sp=$SP" >> $EP/xtab
+echo "ep=$EP" >> $EP/xtab
 
 printf "
 */$INT * * * * " >> $EP/xtab
 
 [[ $REF > 0 ]] && \
-printf "$SP/scan.sh $REF $EP $DELAY 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
+printf "$sp/scan.sh $REF $ep $DELAY 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
-printf "$SP/lights.sh off 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
-printf "$SP/scan.sh $RES $EP $DELAY 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
+printf "$sp/lights.sh off 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
+printf "$sp/scan.sh $RES $ep $DELAY 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
-printf "$SP/lights.sh on 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
+printf "$sp/lights.sh on 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
 [[ $XFER == "YES" || $LIGHTS == "yes" ]] && \
-printf "$SP/transfer.sh $EP 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
-printf "$SP/count.sh $EP 2>&1 | tee -a $EP/LOG" >> $EP/xtab
-echo -e "\n" >> $EP/xtab
+printf "$sp/transfer.sh $ep 2>&1 | tee -a $/LOG; " >> $EP/xtab
+printf "$sp/count.sh $ep 2>&1 | tee -a $ep/LOG" >> $EP/xtab
 echo
 echo "xtab exported"
 echo
