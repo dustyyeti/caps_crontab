@@ -21,7 +21,7 @@ source ./exp/last.exp
 EXP=$(echo $EXP|tr -d '\n')
 $INT=$(echo $INT|tr -d '\n')
 
-SP="/home/caps/scripts/caps_cronscan/"
+SP="/home/caps/scripts/caps_cronscan"
 
 ### declare vars
 
@@ -94,7 +94,7 @@ do
 	done
 done
 
-EP=${SP}exp/${EXP}
+EP=${SP}/exp/${EXP}
 if [ ! -d "$EP" ]; then
     mkdir -p $EP
 fi
@@ -112,7 +112,7 @@ printf "
 [[ $REF > 0 ]] && \
 printf "$SP/scan.sh $REF $EP $DELAY 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
-printf "$SP/lights.sh off 2>&1 | tee -a $EP/LOG; \\" >> $EP/xtab
+printf "$SP/lights.sh off 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
 printf "$SP/scan.sh $RES $EP $DELAY 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
 printf "$SP/lights.sh on 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
