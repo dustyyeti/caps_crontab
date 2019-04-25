@@ -119,6 +119,7 @@ printf "$SP/lights.sh on 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
 [[ $XFER == "YES" || $LIGHTS == "yes" ]] && \
 printf "$SP/transfer.sh $EP 2>&1 | tee -a $EP/LOG; " >> $EP/xtab
 printf "$SP/count.sh $EP 2>&1 | tee -a $EP/LOG" >> $EP/xtab
+echo -e "\n" >> $EP/xtab
 echo
 echo "xtab exported"
 echo
