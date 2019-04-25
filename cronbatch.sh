@@ -7,13 +7,14 @@
 
 
 SP="/home/caps/scripts/caps_cronscan/"
+
 EXPNAME=$1
 RES=$2
 REF=$3
 DELAY=$4
 INT=$5
-
 EP=$SP$EXPNAME
+
 
 # Create experiment direcotry if it doesn't already exist
 if [ ! -d "$EP" ]; then
