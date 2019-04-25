@@ -1,3 +1,5 @@
-# ignore all directories, which are assumed to be experiment directories
+# */* # ignore all directories, which are assumed to be experiment directories
 
-*/*
+/exp
+
+
