@@ -142,10 +142,11 @@ printf "\$sp/lights.sh on 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 [[ $XFER == "YES" || $LIGHTS == "yes" ]] && \
 printf "\$sp/transfer.sh \$ep 2>&1 | tee -a $/LOG; " >> $EP/xtab
 printf "\$sp/count.sh \$ep 2>&1 | tee -a \$ep/LOG" >> $EP/xtab
+echo >> $EP/xtab ###- blank line needed before EOF
 echo
 echo "xtab exported"
 echo
 echo "install crontab..."
 echo
 
-#crontab $EP/xtab
+crontab $EP/xtab
