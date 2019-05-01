@@ -94,10 +94,20 @@ do
 	done
 done
 
-EP=${SP}/exp/${EXP}
+
+EROOT=${SP}/exp/
+EP=$EROOT${EXP}
 if [ ! -d "$EP" ]; then
     mkdir -p $EP
 fi
+
+### write out last.exp file
+
+touch $EROOT/test
+echo "
+writing last.exp:"
+
+echo "EXP=$EXP INT=$INT RES=$RES REF=$REF LIGHTS=$LIGHTS XFER=$XFER DELAY=$DELAY" 2>&1 | tee $EROOT/last.exp
 
 echo 
 echo "working with Directory $EP"
@@ -122,17 +132,20 @@ printf "
 */$INT * * * * " >> $EP/xtab
 
 [[ $REF > 0 ]] && \
-printf "$sp/scan.sh $REF $ep $DELAY 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
+
+printf "\$sp/scan.sh $REF \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
-printf "$sp/lights.sh off 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
-printf "$sp/scan.sh $RES $ep $DELAY 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
+printf "\$sp/lights.sh off 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
+printf "\$sp/scan.sh $RES \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
-printf "$sp/lights.sh on 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
+printf "\$sp/lights.sh on 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 [[ $XFER == "YES" || $LIGHTS == "yes" ]] && \
-printf "$sp/transfer.sh $ep 2>&1 | tee -a $/LOG; " >> $EP/xtab
-printf "$sp/count.sh $ep 2>&1 | tee -a $ep/LOG" >> $EP/xtab
+printf "\$sp/transfer.sh \$ep 2>&1 | tee -a $/LOG; " >> $EP/xtab
+printf "\$sp/count.sh \$ep 2>&1 | tee -a \$ep/LOG" >> $EP/xtab
 echo
 echo "xtab exported"
 echo
-echo "crontab installed"
-crontab $EP/xtab
+echo "install crontab..."
+echo
+
+#crontab $EP/xtab
