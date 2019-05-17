@@ -140,7 +140,7 @@ printf "\$sp/scan.sh $RES \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 [[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
 printf "\$sp/lights.sh on 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 [[ $XFER == "YES" || $LIGHTS == "yes" ]] && \
-printf "\$sp/transfer.sh \$ep 2>&1 | tee -a $ep/LOG; " >> $EP/xtab
+printf "\$sp/transfer.sh \$ep 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 printf "\$sp/count.sh \$ep 2>&1 | tee -a \$ep/LOG" >> $EP/xtab
 echo >> $EP/xtab ###- blank line needed before EOF
 echo
