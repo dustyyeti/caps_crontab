@@ -80,14 +80,27 @@ do
 
 		# echo -e ${!KEYS[$i]Col}$EXP${NC}
 	done
-	echo -e "\n\n"
-	read -p "[enter] to except or [key] for new values > " -n 1 key
+	echo ""
+	echo " _____________________________"
+	echo ""
+	if [[ $LIGHTS == "yes" ]]
+	then
+		printf "%29s" "to program lights [enter] "
+	else
+		printf "%29s" "start program [enter] "
+	fi
+	echo ""
+	printf "%29s" "to set new values [hotkey] "
+	echo ""
+	printf "%31s" "[ENTER / key] choice > "
+	read -n 1 key
 	[[ $key = "" ]] && STAY_TF="false" #- enter key
 	for ((i=0;i<lKeys;i++))
 	do	
 		if [[ ${KEYS[$i]} = $key ]]; then
 			echo
-			read -p "New ${BLURBS[$i]} > " ${ARGS[$i]}
+			printf "%31s" "New ${BLURBS[$i]} > "
+			read ${ARGS[$i]}
 			echo ${COLS[0]}
 			COLS[$i]=$Green
 		fi
