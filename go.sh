@@ -31,7 +31,10 @@ FORE='\033[1;92m'
 IWhite='\033[0;97m'
 Inv='\e[7m'
 
-BIWhite='\033[1;97m'
+BIWhite='\033[1;95m'
+BIPurple='\033[1;95m'
+
+Italic='\033[3m'
 
 ##. DISK OPS
 #. load last experiment
@@ -83,38 +86,34 @@ COLS[0]=$Red
 while [ "$STAY_TF" = "true" ] 
 do
 	clear
-	echo -e "\n${BIWhite}
+	echo -e "${BIPurple}
                                   
  CREATE NEW CRONTAB EXPERIMENT   ${NC}"
 	echo ""
-
 	echo -e "${Inv}    Experiment Parameters      ${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} "
-	printf '\xE2\x98\xA0%.0s' {1..30}
-	# printf '\/%.0s' {1..31}
+	printf '.%.0s' {1..31}
 	echo ""
-	# echo -e "\n"
 	for ((i=0;i<lKeys;i++)) #$lKeys;i++))
 	do
 		# echo -e "${On_IBlack}"
 		printf "%29s" "${BLURBS[$i]} ["
 		echo -e ${Cyan}${KEYS[$i]}${NC}"] "${COLS[$i]}${!ARGS[$i]}${NC}
-		# ${KEYS[$i]}Col
-		# echo -e ${NC}" "${COLS[$i]}${!ARGS[$i]}${NC}
-
-		# echo -e ${!KEYS[$i]Col}$EXP${NC}
 	done
-	# echo -e "  ____________________________"
+
+	printf '.%.0s' {1..31}
 	echo ""
 	if [[ $LIGHTS == "yes" ]]
 	then
-		printf "%29s" "to program lights [enter] "
+		printf "%25s" "to program lights ["
+		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
 	else
-		printf "%29s" "start program [enter] "
+		printf "%25s" "start program ["
+		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
 	fi
+	printf "%27s" "set new parameters ["
+	echo -e ${Cyan}${Italic}"key"${NC}"]" 
 	echo ""
-	printf "%29s" "set new parameters [key] "
-	echo ""
-	printf "%31s" "[ENTER / key] choice > "
+	printf "%32s" "[ENTER / key] choice > "
 	read -n 1 key
 	[[ $key = "" ]] && STAY_TF="false" #- enter key
 	for ((i=0;i<lKeys;i++))
