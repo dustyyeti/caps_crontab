@@ -1,10 +1,10 @@
 #!/bin/bash
 
-### Color codes for UI
-# Reset
+##. Color codes for UI
+#. Reset
 NC='\033[0m'       # Text Reset
 
-# Regular Colors
+#. Regular Colors
 Black='\033[0;30m'        # Black
 Red='\033[0;31m'          # Red
 Green='\033[0;32m'        # Green
@@ -15,8 +15,26 @@ Purple='\033[0;35m'       # Purple
 Cyan='\033[0;36m'         # Cyan
 White='\033[0;37m'        # White
 
-### disc ops
-# load last experiment
+#. Bold Colors
+BYellow='\033[1;33m' 
+UYellow='\033[4;33m'
+IYellow='\033[0;93m'
+On_IYellow='\033[47m' 
+TESTIT='\e[7m'
+UBlack='\033[4;30m'
+
+On_IBlack='\033[0;100m'
+
+BACK='\033[40m'
+UGreen='\033[4;32m'
+FORE='\033[1;92m'
+IWhite='\033[0;97m'
+Inv='\e[7m'
+
+BIWhite='\033[1;97m'
+
+##. DISK OPS
+#. load last experiment
 source ./exp/last.exp
 EXP=$(echo $EXP|tr -d '\n')
 $INT=$(echo $INT|tr -d '\n')
@@ -65,23 +83,27 @@ COLS[0]=$Red
 while [ "$STAY_TF" = "true" ] 
 do
 	clear
-	echo -e "\n
-=================================
-  Create new crontab experiment
-================================="
-	echo -e " ${Red}WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} "
-	echo -e "\n"
+	echo -e "\n${BIWhite}
+                                  
+ CREATE NEW CRONTAB EXPERIMENT   ${NC}"
+	echo ""
 
+	echo -e "${Inv}    Experiment Parameters      ${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} "
+	printf '\xE2\x98\xA0%.0s' {1..30}
+	# printf '\/%.0s' {1..31}
+	echo ""
+	# echo -e "\n"
 	for ((i=0;i<lKeys;i++)) #$lKeys;i++))
 	do
-		printf "%31s" "${BLURBS[$i]} [${KEYS[$i]}] "
+		# echo -e "${On_IBlack}"
+		printf "%29s" "${BLURBS[$i]} ["
+		echo -e ${Cyan}${KEYS[$i]}${NC}"] "${COLS[$i]}${!ARGS[$i]}${NC}
 		# ${KEYS[$i]}Col
-		echo -e ${COLS[$i]}${!ARGS[$i]}${NC}
+		# echo -e ${NC}" "${COLS[$i]}${!ARGS[$i]}${NC}
 
 		# echo -e ${!KEYS[$i]Col}$EXP${NC}
 	done
-	echo ""
-	echo " _____________________________"
+	# echo -e "  ____________________________"
 	echo ""
 	if [[ $LIGHTS == "yes" ]]
 	then
@@ -90,7 +112,7 @@ do
 		printf "%29s" "start program [enter] "
 	fi
 	echo ""
-	printf "%29s" "to set new values [hotkey] "
+	printf "%29s" "set new parameters [key] "
 	echo ""
 	printf "%31s" "[ENTER / key] choice > "
 	read -n 1 key
