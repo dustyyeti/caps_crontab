@@ -20,6 +20,7 @@ BYellow='\033[1;33m'
 UYellow='\033[4;33m'
 IYellow='\033[0;93m'
 On_IYellow='\033[47m' 
+BPurple='\033[1;35m'
 TESTIT='\e[7m'
 UBlack='\033[4;30m'
 
@@ -50,6 +51,7 @@ declare -a KEYS
 declare -a BLURBS
 declare -a COLS
 declare -a ARGS
+declare -a TYPE
 
 ARGS+=("EXP")
 ARGS+=("INT")
@@ -59,12 +61,20 @@ ARGS+=("LIGHTS")
 ARGS+=("XFER")
 ARGS+=("DELAY")
 
+TYPE+=("STRING")	#EXP
+TYPE+=("INT") 		#INT
+TYPE+=("INT")		#RES
+TYPE+=("INT")		#REF
+TYPE+=("TOGGLE")	#LIGHTS
+TYPE+=("TOGGLE")	#XFER
+TYPE+=("INT")		#DELAY
+
 BLURBS+=("Experiment Name")
 BLURBS+=("Scan Interval Time")
 BLURBS+=("scan resolution")
 BLURBS+=("reference res (0 none)")
-BLURBS+=("use lights?")
-BLURBS+=("server file transfer?")
+BLURBS+=("*toggle use lights")
+BLURBS+=("*toggle server file xfer")
 BLURBS+=("series scan delay")
 
 KEYS=(e i s r l x d)
@@ -86,23 +96,24 @@ COLS[0]=$Red
 while [ "$STAY_TF" = "true" ] 
 do
 	clear
-	echo -e "${BIPurple}
-                                  
- CREATE NEW CRONTAB EXPERIMENT   ${NC}"
+	echo -e "${BPurple}"
+	printf " CREATE NEW CRONTAB EXPERIMENT "
+	echo
+	# echo -e "${BIPurple}⫶ CREATE NEW CRONTAB EXPERIMENT ⫶   ${NC}"
 	echo ""
-	echo -e "${Inv}    Experiment Parameters      ${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} "
+	echo -e "${Inv}    Experiment Parameters      ${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]"
 	printf '.%.0s' {1..31}
 	echo ""
-	for ((i=0;i<lKeys;i++)) #$lKeys;i++))
+
+	for ((i=0;i<lKeys;i++))
 	do
-		# echo -e "${On_IBlack}"
 		printf "%29s" "${BLURBS[$i]} ["
 		echo -e ${Cyan}${KEYS[$i]}${NC}"] "${COLS[$i]}${!ARGS[$i]}${NC}
 	done
 
 	printf '.%.0s' {1..31}
-	echo ""
-	if [[ $LIGHTS == "yes" ]]
+	echo -e "\n"
+	if [[ $LIGHTS == "on" ]]
 	then
 		printf "%25s" "to program lights ["
 		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
@@ -113,20 +124,34 @@ do
 	printf "%27s" "set new parameters ["
 	echo -e ${Cyan}${Italic}"key"${NC}"]" 
 	echo ""
-	printf "%32s" "[ENTER / key] choice > "
+	printf "%32s" "choice > "
 	read -n 1 key
 	[[ $key = "" ]] && STAY_TF="false" #- enter key
+
 	for ((i=0;i<lKeys;i++))
 	do	
-		if [[ ${KEYS[$i]} = $key ]]; then
+		if [[ ${KEYS[$i]} = $key ]]
+		then
 			echo
-			printf "%31s" "New ${BLURBS[$i]} > "
-			read ${ARGS[$i]}
-			echo ${COLS[0]}
+			# ${string:0:3}
+			if [[ ${BLURBS[$i]:0:1} = "*" ]]
+			then				
+				if [[ ${!ARGS[$i]} = "on" ]]
+				then
+					eval ${ARGS[$i]}="off"
+				else
+					eval ${ARGS[$i]}="on"
+				fi
+			else
+				printf "%32s" "New ${BLURBS[$i]} > "
+				read ${ARGS[$i]}
+				echo ${COLS[0]}
+			fi
 			COLS[$i]=$Green
 		fi
 	done
-done
+# sleep 1 #@ this is for debug
+done # END WHILE STAY_TF LOOP
 
 
 EROOT=${SP}/exp/
@@ -168,12 +193,12 @@ printf "
 [[ $REF > 0 ]] && \
 
 printf "\$sp/scan.sh $REF \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
-[[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
+[[ $LIGHTS == "on" ]] && \
 printf "\$sp/lights.sh off 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 printf "\$sp/scan.sh $RES \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
-[[ $LIGHTS == "YES" || $LIGHTS == "yes" ]] && \
+[[ $LIGHTS == "on" ]] && \
 printf "\$sp/lights.sh on 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
-[[ $XFER == "YES" || $LIGHTS == "yes" ]] && \
+[[ $XFER == "on" ]] && \
 printf "\$sp/transfer.sh \$ep 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 echo >> $EP/xtab ###- blank line needed before EOF
 echo
