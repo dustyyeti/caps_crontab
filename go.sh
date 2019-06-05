@@ -1,6 +1,6 @@
 #!/bin/bash
 
-##. Color codes for UI
+## Color codes for UI
 #. Reset
 NC='\033[0m'       # Text Reset
 
@@ -37,7 +37,7 @@ BIPurple='\033[1;95m'
 
 Italic='\033[3m'
 
-##. DISK OPS
+## DISK OPS
 #. load last experiment
 source ./exp/last.exp
 EXP=$(echo $EXP|tr -d '\n')
@@ -45,7 +45,7 @@ $INT=$(echo $INT|tr -d '\n')
 
 SP="/home/caps/scripts/caps_cronscan"
 
-### declare vars
+## declare vars
 
 declare -a KEYS
 declare -a BLURBS
@@ -72,15 +72,15 @@ TYPE+=("INT")		#DELAY
 BLURBS+=("Experiment Name")
 BLURBS+=("Scan Interval Time")
 BLURBS+=("scan resolution")
-BLURBS+=("reference res (0 none)")
-BLURBS+=("*toggle use lights")
-BLURBS+=("*toggle server file xfer")
+BLURBS+=("* REF scan every frame")
+BLURBS+=("* use lights")
+BLURBS+=("* server file transfer")
 BLURBS+=("series scan delay")
 
 KEYS=(e i s r l x d)
 lKeys=${#KEYS[@]} #(( lKeys-- ))
 
-# flow booleans
+## flow booleans
 STAY_TF=true
 MATCH_TF=false
 
@@ -92,7 +92,7 @@ done
 COLS[0]=$Red
 
 
-#- main looop
+### main looop ----------------------
 while [ "$STAY_TF" = "true" ] 
 do
 	clear
@@ -111,8 +111,11 @@ do
 		echo -e ${Cyan}${KEYS[$i]}${NC}"] "${COLS[$i]}${!ARGS[$i]}${NC}
 	done
 
+	#........................
 	printf '.%.0s' {1..31}
 	echo -e "\n"
+	printf "%27s" "set new parameters with ["
+	echo -e ${Cyan}${Italic}"key"${NC}"]" 
 	if [[ $LIGHTS == "on" ]]
 	then
 		printf "%25s" "to program lights ["
@@ -121,8 +124,7 @@ do
 		printf "%25s" "start program ["
 		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
 	fi
-	printf "%27s" "set new parameters ["
-	echo -e ${Cyan}${Italic}"key"${NC}"]" 
+
 	echo ""
 	printf "%32s" "choice > "
 	read -n 1 key
@@ -133,8 +135,7 @@ do
 		if [[ ${KEYS[$i]} = $key ]]
 		then
 			echo
-			# ${string:0:3}
-			if [[ ${BLURBS[$i]:0:1} = "*" ]]
+			if [[ ${BLURBS[$i]:0:1} = "*" ]] #: if first character is *
 			then				
 				if [[ ${!ARGS[$i]} = "on" ]]
 				then
@@ -151,8 +152,13 @@ do
 		fi
 	done
 # sleep 1 #@ this is for debug
-done # END WHILE STAY_TF LOOP
+done #: END WHILE STAY_TF LOOP
 
+### if LIGHTS=on, run light setup
+if [[ $LIGHTS == "on" ]]
+	then
+		echo
+	fi
 
 EROOT=${SP}/exp/
 EP=$EROOT${EXP}
@@ -161,8 +167,6 @@ if [ ! -d "$EP" ]; then
 fi
 
 ### write out last.exp file
-
-touch $EROOT/test
 echo "
 writing last.exp:"
 
@@ -171,20 +175,20 @@ echo "EXP=$EXP INT=$INT RES=$RES REF=$REF LIGHTS=$LIGHTS XFER=$XFER DELAY=$DELAY
 echo 
 echo "working with Directory $EP"
 
-echo "# programatic crontab file generated for CAPS scanner control
-#
-# ==============
-# Experiment Job: $EXP
-#
-" > $EP/xtab
+echo -n "# programatic crontab file generated for CAPS scanner control
 
-for ((i=0;i<lKeys;i++)) #$lKeys;i++))
+# " > $EP/xtab
+printf '.%.0s' {1..29} >> $EP/xtab
+echo >> $EP/xtab
+for ((i=0;i<lKeys;i++))
 do
-	printf "%31s" "#" "${BLURBS[$i]}: " >> $EP/xtab
+	echo -n "#" >> $EP/xtab
+	printf "%31s" "${BLURBS[$i]}: " >> $EP/xtab
 	echo ${!ARGS[$i]} >> $EP/xtab
 done
 
-echo "sp=$SP" >> $EP/xtab
+echo "
+sp=$SP" >> $EP/xtab
 echo "ep=$EP" >> $EP/xtab
 
 printf "
