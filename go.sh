@@ -44,77 +44,76 @@ Italic='\033[3m'
 
 ### DECLARE ARRAYS
 
-declare -a ARGS
-declare -a BLURBS
-declare -a SUB
-declare -a KEYS
-declare -a COLS
-declare -a TYPE
-declare -a SUBBLURBS
+declare -a args
+declare -a blurbs
+declare -a subs
+declare -a keys
+declare -a cols
+declare -a types
+declare -a subblurbs
 
-ARGS+=("EXP")
-ARGS+=("SCANNERS")
-ARGS+=("INT")
-ARGS+=("RES")
-ARGS+=("REF")
-ARGS+=("XFER")
-ARGS+=("DELAY")
-ARGS+=("LIGHTS")
-# ARGS+=("scanner_ID1")
-# ARGS+=("UNK2")
-# ARGS+=("UNK3")
-# ARGS+=("UNK4")
+args+=("EXP")
+args+=("SCANNERS")
+args+=("INT")
+args+=("RES")
+args+=("REF")
+args+=("XFER")
+args+=("DELAY")
+args+=("LIGHTS")
+# args+=("scanner_ID1")
+# args+=("UNK2")
+# args+=("UNK3")
+# args+=("UNK4")
 
-# TYPE+=("STRING")	#EXP
-# TYPE+=("INT")		#SCANNERS
-# TYPE+=("INT") 		#INT
-# TYPE+=("INT")		#RES
-# TYPE+=("INT")		#REF
-# TYPE+=("TOGGLE")	#XFER
-# TYPE+=("INT")		#DELAY
-# TYPE+=("TOGGLE")	#LIGHTS
+# types+=("STRING")	#EXP
+# types+=("INT")		#SCANNERS
+# types+=("INT") 		#INT
+# types+=("INT")		#RES
+# types+=("INT")		#REF
+# types+=("TOGGLE")	#XFER
+# types+=("INT")		#DELAY
+# types+=("TOGGLE")	#LIGHTS
 
-BLURBS+=("Experiment Name")
-BLURBS+=("Scanner Count")
-BLURBS+=("Scan Interval Time")
-BLURBS+=("Scan resolution")
-BLURBS+=("* REF scan every frame")
-BLURBS+=("* server file transfer")
-BLURBS+=("series scan delay")
-BLURBS+=("* use lights")
-# BLURBS+=("scanner1 ID")
-# BLURBS+=("something lights")
-# BLURBS+=("something lights")
-# BLURBS+=("something lights")
+blurbs+=("Experiment Name")
+blurbs+=("Scanner Count")
+blurbs+=("Scan Interval Time")
+blurbs+=("Scan resolution")
+blurbs+=("* REF scan every frame")
+blurbs+=("* server file transfer")
+blurbs+=("series scan delay")
+blurbs+=("* use lights")
+# blurbs+=("scanner1 ID")
+# blurbs+=("something lights")
+# blurbs+=("something lights")
+# blurbs+=("something lights")
 
-SUB+=("_exp")
-SUB+=("_exp")
-SUB+=("_exp")
-SUB+=("_exp")
-SUB+=("_exp")
-SUB+=("_exp")
-SUB+=("_exp")
-SUB+=("_exp")
-# SUB+=("_dish")
-# SUB+=("_lights")
-# SUB+=("_lights")
-# SUB+=("_lights")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+# subs+=("_dish")
+# subs+=("_lights")
+# subs+=("_lights")
+# subs+=("_lights")
 
-SUBBLURBS+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
-SUBBLURBS+=("${On_IBlack}___________Dish Setup__________${NC}")
-SUBBLURBS+=("${BCyan}${Inv}____Neopixel Light Program_____${NC}")
+subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
+subblurbs+=("${On_IBlack}___________Dish Setup__________${NC}")
+subblurbs+=("${BCyan}${Inv}____Neopixel Light Program_____${NC}")
 
-KEYS=(e s i r z x d l k)
+keys=(e s i r z x d l k)
 
-lKeys=${#KEYS[@]} #: establish length of KEYS array
+lKeys=${#keys[@]} #: establish length of keys array
 
 declare -i sStart=8 #: scanner id arg starts at index 7
 
 ###. flow booleans
-STAY_TF=true
-MATCH_TF=false
+stay_TF=true
 
-Insert(){
+insert(){
     h='
 ################## insert ########################
 # Usage:
@@ -139,41 +138,41 @@ Insert(){
 
 }
 
-Spacer (){ #: helps with UI building
+spacer (){ #: helps with UI building
 	echo
-	echo -e ${SUBBLURBS[$isub]}
+	echo -e ${subblurbs[$isub]}
 	printf '.%.0s' {1..31} #....................
 	echo
 }
 
-EatKeys (){ #: digest user key inputs
+eatkeys (){ #: digest user key inputs
 		if [[ $1 = $key ]]
 		then
 			echo
-			if [[ ${BLURBS[$i]:0:1} = "*" ]] #: if first character is *
+			if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
 			then				
-				if [[ ${!ARGS[$i]} = "on" ]]
+				if [[ ${!args[$i]} = "on" ]]
 				then
-					eval ${ARGS[$i]}="off"
+					eval ${args[$i]}="off"
 				else
-					eval ${ARGS[$i]}="on"
+					eval ${args[$i]}="on"
 				fi
 			else
-				printf "%32s" "New ${BLURBS[$i]} > "
-				read ${ARGS[$i]}
-				echo ${COLS[0]}
+				printf "%32s" "New ${blurbs[$i]} > "
+				read ${args[$i]}
+				echo ${cols[0]}
 			fi
-			COLS[$i]=$Green
+			cols[$i]=$Green
 		fi
 }
 
 ### use loop to setup initial colors
 for ((i=0;i<$lKeys;i++))
 do
-	COLS+=($LtBlue)
-	#declare ${KEYS[$i]}Col=$LtBlue
+	cols+=($LtBlue)
+	#declare ${keys[$i]}Col=$LtBlue
 done
-COLS[0]=$Red #: set exp name to warning color
+cols[0]=$Red #: set exp name to warning color
 
 ### DISK OPS
 #. load last experiment
@@ -182,49 +181,45 @@ EXP=$(echo $EXP|tr -d '\n') #? what do these lines do??
 $INT=$(echo $INT|tr -d '\n')
 
 
-### Insert ARGS based on startup settings
+### insert args based on startup settings
 for ((i=0;i<SCANNERS;i++))
 do
 	y=$sStart
 	# echo $i
-	# Insert ARGS 8 'scanner_ID1'
+	# insert args 8 'scanner_ID1'
 	 # (( num += x ))
-	Insert ARGS $y scanner_ID$i
+	insert args $y scanner_ID$i
 done
 
-echo "${ARGS[@]}"
+echo "${args[@]}"
 
 read
 clear
 main (){
 ### main looop --------------------------------------------
-	while [ "$STAY_TF" = "true" ] 
+	while [ "$stay_TF" = "true" ] 
 	do
 		clear
 		echo -e "${BPurple}"
 		printf " CREATE NEW CRONTAB EXPERIMENT "
 		echo
-		# boo=$(printf "%29s" "${BLURBS[$i]} [")
-
-		# echo "$boo"
 		isub=0
 		for ((i=0;i<lKeys;i++))
 		do
-			# echo sub $sub
-			# echo "SUB[i]" $SUB[$i]
-			if [[ $sub != ${SUB[$i]} ]]
+			#: if this is a new subsection, then echo section heading from array
+			if [[ $buf != ${subs[$i]} ]] 
 			then
-				sub=${SUB[$i]}
-				if ! [[ $sub = "_lights" && $LIGHTS = "off" ]]
+				buf=${subs[$i]} #: store the subsection in buf
+				if ! [[ $buf = "_lights" && $LIGHTS = "off" ]]
 				then
-					Spacer isub
+					spacer isub
 					((isub++))
 				else
 					break
 				fi
 			fi
-			printf "%29s" "${BLURBS[$i]} ["
-			echo -e ${Cyan}${KEYS[$i]}${NC}"] "${COLS[$i]}${!ARGS[$i]}${NC}
+			printf "%29s" "${blurbs[$i]} ["
+			echo -e ${Cyan}${keys[$i]}${NC}"] "${cols[$i]}${!args[$i]}${NC}
 		done
 		echo
 		printf '_%.0s' {1..31}
@@ -249,15 +244,15 @@ main (){
 		
 	###: USER INPUT
 		read -n 1 key
-		[[ $key = "" ]] && STAY_TF="false" #- enter key
+		[[ $key = "" ]] && stay_TF="false" #- enter key
 
 		#: experiment parms list
 		for ((i=0;i<lKeys;i++))
 		do
-			EatKeys ${KEYS[$i]} #: send the key to check for hotkey
+			eatkeys ${keys[$i]} #: send the key to check for hotkey
 		done
 	# sleep 1 #@ this is for debug
-	done #: END WHILE STAY_TF LOOP
+	done #: END WHILE stay_TF LOOP
 
 	EROOT=${SP}/exp/
 	EP=$EROOT${EXP}
@@ -269,7 +264,7 @@ main (){
 	echo "
 	writing $EXP.exp:"
 	echo "#exp parameters" 2>&1 | tee $EROOT/last.exp
-	for arg in "${ARGS[@]}"
+	for arg in "${args[@]}"
 	do
 	   echo "${arg}=${!arg}" >> $EROOT/last.exp
 	done
@@ -287,8 +282,8 @@ main (){
 	for ((i=0;i<lKeys;i++))
 	do
 		echo -n "#" >> $EP/xtab
-		printf "%31s" "${BLURBS[$i]}: " >> $EP/xtab
-		echo ${!ARGS[$i]} >> $EP/xtab
+		printf "%31s" "${blurbs[$i]}: " >> $EP/xtab
+		echo ${!args[$i]} >> $EP/xtab
 	done
 
 	echo "
