@@ -1,1 +1,10 @@
-EXP=foo2 SCANNERS=3 INT=5 RES=300 REF=off LIGHTS=on XFER=on DELAY=6
+#exp parameters
+EXP=foo2
+SCANNERS=2
+INT=5
+RES=300
+REF=off
+XFER=on
+DELAY=6
+LIGHTS=off
+scanner_ID0=
