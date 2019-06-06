@@ -51,6 +51,7 @@ declare -a keys
 declare -a cols
 declare -a types
 declare -a subblurbs
+declare -a func
 
 keys=(e s i r z x y l)
 
@@ -80,6 +81,16 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
+
+func+=("")
+func+=("update")
+func+=("")
+func+=("")
+func+=("")
+func+=("")
+func+=("")
+func+=("")
+
 
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
 subblurbs+=("${On_IBlack}___________Dish Setup__________${NC}")
@@ -146,12 +157,13 @@ eatkeys (){ #: digest user key inputs
 				read ${args[$i]}
 			fi
 			cols[$i]=$Green
+			update #: run update to check for changes to the arrays (eg scanner count change)
 		fi
 }
 
 init_colors (){
 ### use loop to setup initial colors
-	for ((i=0;i<$lKeys;i++))
+	for ((i=0;i<lKeys;i++))
 	do
 		cols+=($LtBlue)
 		#declare ${keys[$i]}Col=$LtBlue
@@ -165,42 +177,74 @@ load_parms (){
 	source ./exp/last.exp #: in one commad, loads all variables
 	EXP=$(echo $EXP|tr -d '\n') #? what do these lines do??
 	INT=$(echo $INT|tr -d '\n')
-	
-	dish_cnt=0 #!! temporary
-	local i j ins ini inj
-	ins=6 #: insert at arrays index padding
-	### insert args based on startup settings
-	for ((i=1;i<$(( SCANNERS+1 ));i++))
-	do
-		# echo $SCANNERS
-		# echo i=$i
-		
-		ini=$((ins+i*2))
-		echo ini $ini
-		read
-		for ((j=1;j<$(( dish_cnt+1 ));j++))
+	remember_scanners=0
+}
+
+update (){
+	# echo UPDATE
+	# echo $remember_scanners
+	# echo $SCANNERS
+	# read
+	if [[ remember_scanners -ne SCANNERS ]] #: number of scanners has changed
+	#: delete all args related to old scanner count
+	then
+		echo it changed
+		local i j ins ini inj
+		local ins=8 #: insert at arrays index padding
+		local xindex=$((remember_scanners*dish_cnt+remember_scanners))
+		# echo "before: ${args[*]}"
+		for ((i=((lKeys-1));i>0;i--)) #((i=0;i<lKeys;i++))
 		do
-			#! FORMAT for MATH: a=$(( 4 + 5 ))
-			inj=$((ins+i+j))
-			insert args $(( inj )) "DISH${i}_${j}"
-			insert keys $(( inj )) d
-			insert blurbs $(( inj )) "Dish${j}"
+			echo i $i
+			if [[ ${subs[$i]} = "_dish" ]]
+			then
+				echo got one
+				unset args[$i]
+				unset blurbs[$i]
+				unset keys[$i]
+				unset subs[$i]	
+			fi
 		done
-		insert args $(( ini )) SCANNER${i}_ID
-		insert blurbs $(( ini )) "Scanner${i} ID"
-		insert keys $(( ini )) k
-		((ini++))
-		insert args $(( ini )) TEMPLATE${i}_ID
-		insert blurbs $(( ini )) "Scan Template${i} ID"
-		insert keys $(( ini )) t
-	done
+		read
+		#--replace this
+		# for ((i=((ins+xindex));i>$((ins-));i--))
+		# do
+		# 	unset args[$i]
+		# 	unset blurbs[$i]
+		# 	unset keys[$i]
+		# 	# args=( "${args[@]}" )
+		# 	# blurbs=( "${blurbs[@]}" )			
+		# 	# keys=( "${keys[@]}" )
+		# done
 
-	echo "${args[@]}"
-	echo "${blurbs[@]}"
-	echo "${keys[@]}"
-	read
-	clear
 
+		remember_scanners=$SCANNERS #: reset scanner count memory
+
+		# read
+		### insert args based on startup settings
+		for ((i=1;i<$(( SCANNERS+1 ));i++))
+		do
+			ini=$((ins+((i-1))*2+((i-1))*dish_cnt))
+			insert args $(( ini )) SCANNER${i}_ID
+			insert blurbs $(( ini )) "Scanner${i} ID"
+			insert keys $(( ini )) k
+			insert subs $(( ini )) "_dish"
+			((ini++))
+			insert args $(( ini )) TEMPLATE${i}_ID
+			insert blurbs $(( ini )) "Template${i} ID"
+			insert keys $(( ini )) t
+			insert subs $(( ini )) "_dish"
+			for ((j=1;j<$(( dish_cnt+1 ));j++))
+			do
+				#! FORMAT for MATH: a=$(( 4 + 5 ))
+				inj=$((ini+j))
+				insert args $(( inj )) "DISH${i}_${j}"
+				insert keys $(( inj )) d
+				insert blurbs $(( inj )) "Dish${j}"
+				insert subs $(( ini )) "_dish"
+			done
+		done
+	fi
 }
 
 cronit (){
@@ -313,4 +357,5 @@ while [ "$stay_TF" = "true" ]
 
 init_colors
 load_parms
+update
 main "$@"
