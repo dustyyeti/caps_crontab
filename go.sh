@@ -1,8 +1,10 @@
 #!/bin/bash
 
 SP="/home/caps/scripts/caps_cronscan"
+dish_cnt=6
 
-## Color codes for UI
+### DECLARE VARIABLES
+##. Color codes for UI
 #. Reset
 NC='\033[0m'       # Text Reset
 
@@ -41,9 +43,7 @@ BIWhite='\033[1;95m'
 BIPurple='\033[1;95m'
 
 Italic='\033[3m'
-
-### DECLARE ARRAYS
-
+##. Arrays
 declare -a args
 declare -a blurbs
 declare -a subs
@@ -51,6 +51,8 @@ declare -a keys
 declare -a cols
 declare -a types
 declare -a subblurbs
+
+keys=(e s i r z x y l)
 
 args+=("EXP")
 args+=("SCANNERS")
@@ -60,19 +62,6 @@ args+=("REF")
 args+=("XFER")
 args+=("DELAY")
 args+=("LIGHTS")
-# args+=("scanner_ID1")
-# args+=("UNK2")
-# args+=("UNK3")
-# args+=("UNK4")
-
-# types+=("STRING")	#EXP
-# types+=("INT")		#SCANNERS
-# types+=("INT") 		#INT
-# types+=("INT")		#RES
-# types+=("INT")		#REF
-# types+=("TOGGLE")	#XFER
-# types+=("INT")		#DELAY
-# types+=("TOGGLE")	#LIGHTS
 
 blurbs+=("Experiment Name")
 blurbs+=("Scanner Count")
@@ -82,10 +71,6 @@ blurbs+=("* REF scan every frame")
 blurbs+=("* server file transfer")
 blurbs+=("series scan delay")
 blurbs+=("* use lights")
-# blurbs+=("scanner1 ID")
-# blurbs+=("something lights")
-# blurbs+=("something lights")
-# blurbs+=("something lights")
 
 subs+=("_exp")
 subs+=("_exp")
@@ -95,23 +80,23 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
-# subs+=("_dish")
-# subs+=("_lights")
-# subs+=("_lights")
-# subs+=("_lights")
 
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
 subblurbs+=("${On_IBlack}___________Dish Setup__________${NC}")
 subblurbs+=("${BCyan}${Inv}____Neopixel Light Program_____${NC}")
 
-keys=(e s i r z x d l k)
-
-lKeys=${#keys[@]} #: establish length of keys array
-
-declare -i sStart=8 #: scanner id arg starts at index 7
-
-###. flow booleans
+##. flow booleans
 stay_TF=true
+
+
+# types+=("STRING")	#EXP
+# types+=("INT")		#SCANNERS
+# types+=("INT") 		#INT
+# types+=("INT")		#RES
+# types+=("INT")		#REF
+# types+=("TOGGLE")	#XFER
+# types+=("INT")		#DELAY
+# types+=("TOGGLE")	#LIGHTS
 
 insert(){
     h='
@@ -125,6 +110,7 @@ insert(){
 #       element     : Element to insert
 ##################################################
     '
+    local i
     [[ $1 = -h ]] && { echo "$h" >/dev/stderr; return 1; }
     declare -n __arr__=$1   # reference to the array variable
     i=$2                    # index to insert at
@@ -134,8 +120,6 @@ insert(){
     (( $1 < 0 )) && { echo "E: insert: index can not be negative" >/dev/stderr; return 1; }
     # Now insert $el at $i
     __arr__=("${__arr__[@]:0:$i}" "$el" "${__arr__[@]:$i}")
-
-
 }
 
 spacer (){ #: helps with UI building
@@ -160,100 +144,66 @@ eatkeys (){ #: digest user key inputs
 			else
 				printf "%32s" "New ${blurbs[$i]} > "
 				read ${args[$i]}
-				echo ${cols[0]}
 			fi
 			cols[$i]=$Green
 		fi
 }
 
+init_colors (){
 ### use loop to setup initial colors
-for ((i=0;i<$lKeys;i++))
-do
-	cols+=($LtBlue)
-	#declare ${keys[$i]}Col=$LtBlue
-done
-cols[0]=$Red #: set exp name to warning color
-
-### DISK OPS
-#. load last experiment
-source ./exp/last.exp #: in one commad, loads all variables
-EXP=$(echo $EXP|tr -d '\n') #? what do these lines do??
-$INT=$(echo $INT|tr -d '\n')
-
-
-### insert args based on startup settings
-for ((i=0;i<SCANNERS;i++))
-do
-	y=$sStart
-	# echo $i
-	# insert args 8 'scanner_ID1'
-	 # (( num += x ))
-	insert args $y scanner_ID$i
-done
-
-echo "${args[@]}"
-
-read
-clear
-main (){
-### main looop --------------------------------------------
-	while [ "$stay_TF" = "true" ] 
+	for ((i=0;i<$lKeys;i++))
 	do
-		clear
-		echo -e "${BPurple}"
-		printf " CREATE NEW CRONTAB EXPERIMENT "
-		echo
-		isub=0
-		for ((i=0;i<lKeys;i++))
-		do
-			#: if this is a new subsection, then echo section heading from array
-			if [[ $buf != ${subs[$i]} ]] 
-			then
-				buf=${subs[$i]} #: store the subsection in buf
-				if ! [[ $buf = "_lights" && $LIGHTS = "off" ]]
-				then
-					spacer isub
-					((isub++))
-				else
-					break
-				fi
-			fi
-			printf "%29s" "${blurbs[$i]} ["
-			echo -e ${Cyan}${keys[$i]}${NC}"] "${cols[$i]}${!args[$i]}${NC}
-		done
-		echo
-		printf '_%.0s' {1..31}
-		echo
-		printf "%27s" "set new parameters with ["
-		echo -e ${Cyan}${Italic}"key"${NC}"]" 
-		printf "%25s" "start program ["
-		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
+		cols+=($LtBlue)
+		#declare ${keys[$i]}Col=$LtBlue
+	done
+	cols[0]=$Red #: set exp name to warning color
+}
 
-		##! possible light routine
-		# if [[ $LIGHTS == "on" ]]
-		# then
-		# 	printf "%25s" "to program lights ["
-		# 	echo -e ${Cyan}${Italic}"enter"${NC}"]" 
-		# else
-		# 	printf "%25s" "start program ["
-		# 	echo -e ${Cyan}${Italic}"enter"${NC}"]" 
-		# fi
-
-		echo ""
-		printf "%32s" "choice > "
+load_parms (){
+### DISK OPS
+	#. load last experiment
+	source ./exp/last.exp #: in one commad, loads all variables
+	EXP=$(echo $EXP|tr -d '\n') #? what do these lines do??
+	INT=$(echo $INT|tr -d '\n')
+	
+	dish_cnt=0 #!! temporary
+	local i j ins ini inj
+	ins=6 #: insert at arrays index padding
+	### insert args based on startup settings
+	for ((i=1;i<$(( SCANNERS+1 ));i++))
+	do
+		# echo $SCANNERS
+		# echo i=$i
 		
-	###: USER INPUT
-		read -n 1 key
-		[[ $key = "" ]] && stay_TF="false" #- enter key
-
-		#: experiment parms list
-		for ((i=0;i<lKeys;i++))
+		ini=$((ins+i*2))
+		echo ini $ini
+		read
+		for ((j=1;j<$(( dish_cnt+1 ));j++))
 		do
-			eatkeys ${keys[$i]} #: send the key to check for hotkey
+			#! FORMAT for MATH: a=$(( 4 + 5 ))
+			inj=$((ins+i+j))
+			insert args $(( inj )) "DISH${i}_${j}"
+			insert keys $(( inj )) d
+			insert blurbs $(( inj )) "Dish${j}"
 		done
-	# sleep 1 #@ this is for debug
-	done #: END WHILE stay_TF LOOP
+		insert args $(( ini )) SCANNER${i}_ID
+		insert blurbs $(( ini )) "Scanner${i} ID"
+		insert keys $(( ini )) k
+		((ini++))
+		insert args $(( ini )) TEMPLATE${i}_ID
+		insert blurbs $(( ini )) "Scan Template${i} ID"
+		insert keys $(( ini )) t
+	done
 
+	echo "${args[@]}"
+	echo "${blurbs[@]}"
+	echo "${keys[@]}"
+	read
+	clear
+
+}
+
+cronit (){
 	EROOT=${SP}/exp/
 	EP=$EROOT${EXP}
 	if [ ! -d "$EP" ]; then
@@ -270,12 +220,9 @@ main (){
 	done
 
 	cp $EROOT/last.exp $EP/$EXP.exp
-
 	echo 
 	echo "working with Directory $EP"
-
 	echo -n "# programatic crontab file generated for CAPS scanner control
-
 	# " > $EP/xtab
 	printf '.%.0s' {1..29} >> $EP/xtab
 	echo >> $EP/xtab
@@ -309,8 +256,61 @@ main (){
 	echo
 	echo "install crontab..."
 	echo
-
 	crontab $EP/xtab
 }
 
+main (){
+### main looop --------------------------------------------
+while [ "$stay_TF" = "true" ] 
+	lKeys=${#keys[@]} #: establish length of keys array
+	do
+		clear
+		echo -e "${BPurple}"
+		printf " CREATE NEW CRONTAB EXPERIMENT "
+		echo
+		isub=0
+		for ((i=0;i<lKeys;i++))
+		do
+			#: if this is a new subsection, then echo section heading from array
+			if [[ $buf != ${subs[$i]} ]] 
+			then
+				buf=${subs[$i]} #: store the subsection in buf
+				if ! [[ $buf = "_lights" && $LIGHTS = "off" ]]
+				then
+					spacer isub
+					((isub++))
+				else
+					break
+				fi
+			fi
+			printf "%29s" "${blurbs[$i]} ["
+			echo -e ${Cyan}${keys[$i]}${NC}"] "${cols[$i]}${!args[$i]}${NC}
+		done
+		echo
+		printf '_%.0s' {1..31}
+		echo
+		printf "%27s" "set new parameters with ["
+		echo -e ${Cyan}${Italic}"key"${NC}"]" 
+		printf "%25s" "start program ["
+		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
+		echo ""
+		printf "%32s" "choice > "
+		
+##. USER INPUT
+		read -n 1 key
+		if [[ $key = "" ]] #: enter key runs cronit function, then exits
+		then
+			cronit
+			exit
+		fi
+		for ((i=0;i<lKeys;i++))
+		do
+			eatkeys ${keys[$i]} #: send the key to check for hotkey
+		done
+	# sleep 1 #@ this is for debug
+	done #: END WHILE stay_TF LOOP
+}
+
+init_colors
+load_parms
 main "$@"
