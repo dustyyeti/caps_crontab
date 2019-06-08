@@ -56,14 +56,14 @@ declare -a opts
 
 keys=(e s i r z x y l a f o)
 
-opts+=("[*]")
-opts+=("[int]")
-opts+=("[minutes]")
-opts+=("[100/300/600]")
-opts+=("[on/off]")
-opts+=("[on/off]")
-opts+=("[seconds]")
-opts+=("[on/off]")
+opts+=("S/*")
+opts+=("i/1-9")
+opts+=("I/minutes")
+opts+=("C/100/300/600")
+opts+=("T/on/off")
+opts+=("on/off")
+opts+=("seconds")
+opts+=("on/off")
 
 args+=("EXP")
 args+=("SCANNERS")
@@ -153,7 +153,9 @@ spacer (){ #: helps with UI building
 	printf '.%.0s' {1..31} #....................
 	echo
 }
+limitkeys (){
 
+}
 eatkeys (){ #: digest user key inputs
 	if [[ $1 = "" ]] #enter
 	then
@@ -161,7 +163,27 @@ eatkeys (){ #: digest user key inputs
 		sleep 1
 		return
 	fi
-	if [[ dish_TF = "true" ]] 
+	local opt=(${opts[$2]//// }) #${opts[$2]}
+	local op=${opt[0]}
+	case $op in
+		"C")
+			echo choice!
+			
+			;;
+		*)
+			;;
+	esac
+	# if [[ ${opt:0:1} = "C" ]] #: limited options for input to choose from
+	# then
+	# 	# local limits=(${opt//// })
+	# 	# echo b ${limits[@]}
+	# 	echo ${opt[@]}
+
+	# fi
+
+	# IN="bla@some.com;john@home.com"
+	# arrIN=(${IN//;/ })
+	if [[ dish_TF = "true NOT" ]] 
 	then
 		case $1 in
  			"")
@@ -201,7 +223,7 @@ eatkeys (){ #: digest user key inputs
 		fi
 	#/ end toggles
 	else
-		printf "%32s" "${blurbs[$i]} ${opts[$i]} > "
+		printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
 		if [[ $1 = "d" ]]
 		then
 			dish_TF="true"
@@ -264,7 +286,7 @@ update (){
 			insert blurbs $(( ini )) "Scanner${i} ID"
 			insert keys $(( ini )) k
 			insert subs $(( ini )) "_dish"
-			insert opts $(( ini )) "[*]"
+			insert opts $(( ini )) "*"
 			insert types $(( ini )) "str"
 			insert cols $(( ini )) "$LtBlue"
 			((ini++))
@@ -272,7 +294,7 @@ update (){
 			insert blurbs $(( ini )) "Template${i} ID"
 			insert keys $(( ini )) t
 			insert subs $(( ini )) "_dish"
-			insert opts $(( ini )) "[*]"
+			insert opts $(( ini )) "*"
 			insert types $(( ini )) "str"	
 			insert cols $(( ini )) "$LtBlue"		
 			for ((j=1;j<$(( dish_cnt+1 ));j++))
@@ -283,7 +305,7 @@ update (){
 				insert keys $(( inj )) d
 				insert blurbs $(( inj )) "S${i} Dish${j}"
 				insert subs $(( ini )) "_dish"
-				insert opts $(( ini )) "[-/=/1-9]"
+				insert opts $(( ini )) "C/-/=/1-9"
 				insert types $(( ini )) "choice"	
 				insert cols $(( ini )) "$LtBlue"			
 			done
@@ -393,7 +415,7 @@ while [ "$stay_TF" = "true" ]
 		do
 			if [[ ${keys[$i]} = $key ]]
 			then
-				eatkeys ${keys[$i]} #: send the key to process
+				eatkeys ${keys[$i]} $i #: send the key from array and the index to process
 			fi
 		done
 	# sleep 1 #@ this is for debug
