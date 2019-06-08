@@ -52,8 +52,18 @@ declare -a cols
 declare -a types
 declare -a subblurbs
 declare -a func
+declare -a opts
 
-keys=(e s i r z x y l)
+keys=(e s i r z x y l a f o)
+
+opts+=("[*]")
+opts+=("[int]")
+opts+=("[minutes]")
+opts+=("[100/300/600]")
+opts+=("[on/off]")
+opts+=("[on/off]")
+opts+=("[seconds]")
+opts+=("[on/off]")
 
 args+=("EXP")
 args+=("SCANNERS")
@@ -63,8 +73,11 @@ args+=("REF")
 args+=("XFER")
 args+=("DELAY")
 args+=("LIGHTS")
+args+=("SPECIES")
+args+=("FOODS")
+args+=("OTHER")
 
-blurbs+=("Experiment Name")
+blurbs+=("Exp Name")
 blurbs+=("Scanner Count")
 blurbs+=("Scan Interval Time")
 blurbs+=("Scan resolution")
@@ -72,6 +85,9 @@ blurbs+=("* REF scan every frame")
 blurbs+=("* server file transfer")
 blurbs+=("series scan delay")
 blurbs+=("* use lights")
+blurbs+=("test animals")
+blurbs+=("food sources")
+blurbs+=("note other setup")
 
 subs+=("_exp")
 subs+=("_exp")
@@ -81,15 +97,30 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
+subs+=("_exp")
 
-func+=("")
-func+=("update")
-func+=("")
-func+=("")
-func+=("")
-func+=("")
-func+=("")
-func+=("")
+types+=("str")	#EXP
+types+=("int")		#SCANNERS
+types+=("int") 		#INT
+types+=("choice")		#RES
+types+=("tog")		#REF
+types+=("tog")	#XFER
+types+=("int")		#DELAY
+types+=("tog")	#LIGHTS
+types+=("str")
+types+=("str")
+types+=("str")
+
+# func+=("")
+# func+=("update")
+# func+=("")
+# func+=("")
+# func+=("")
+# func+=("")
+# func+=("")
+# func+=("")
 
 
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
@@ -100,27 +131,8 @@ subblurbs+=("${BCyan}${Inv}____Neopixel Light Program_____${NC}")
 stay_TF=true
 
 
-# types+=("STRING")	#EXP
-# types+=("INT")		#SCANNERS
-# types+=("INT") 		#INT
-# types+=("INT")		#RES
-# types+=("INT")		#REF
-# types+=("TOGGLE")	#XFER
-# types+=("INT")		#DELAY
-# types+=("TOGGLE")	#LIGHTS
 
 insert(){
-    h='
-################## insert ########################
-# Usage:
-#   insert arr_name index element
-#
-#   Parameters:
-#       arr_name    : Name of the array variable
-#       index       : Index to insert at
-#       element     : Element to insert
-##################################################
-    '
     local i
     [[ $1 = -h ]] && { echo "$h" >/dev/stderr; return 1; }
     declare -n __arr__=$1   # reference to the array variable
@@ -128,7 +140,9 @@ insert(){
     el="$3"                 # element to insert
     # handle errors
     [[ ! "$i" =~ ^[0-9]+$ ]] && { echo "E: insert: index must be a valid integer" >/dev/stderr; return 1; }
-    (( $1 < 0 )) && { echo "E: insert: index can not be negative" >/dev/stderr; return 1; }
+
+    #? the following line throws errors sporatically, when ingesting special characters in the 0th index
+    # (( "$1" < 0 )) && { echo "E: insert: index can not be negative" >/dev/stderr; return 1; }
     # Now insert $el at $i
     __arr__=("${__arr__[@]:0:$i}" "$el" "${__arr__[@]:$i}")
 }
@@ -141,24 +155,65 @@ spacer (){ #: helps with UI building
 }
 
 eatkeys (){ #: digest user key inputs
-		if [[ $1 = $key ]]
+	if [[ $1 = "" ]] #enter
+	then
+		echo no change
+		sleep 1
+		return
+	fi
+	if [[ dish_TF = "true" ]] 
+	then
+		case $1 in
+ 			"")
+				echo no change
+				;;
+	    	" ")
+				echo no change
+				;;
+	    	=)
+				# ${args[$i]}="POS CTRL" && echo ${args[$i]}
+				echo pos control #| read args[$i]
+				;;
+	    	-)
+				echo neg control
+				;;
+			1|2|3|4|5|6|7|8|9)
+				echo exp grp $newkey
+				;;
+		     *)
+		        echo nada
+	          	;;
+		esac
+		dish_TF="false"
+		return
+	fi
+
+	#: routine for toggles
+	# if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
+	# if [[ ${opts[$i]} = "[off/on]" ]] 
+	if [[ ${types[$i]} = "tog" ]] 
+	then				
+		if [[ ${!args[$i]} = "on" ]]
 		then
-			echo
-			if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
-			then				
-				if [[ ${!args[$i]} = "on" ]]
-				then
-					eval ${args[$i]}="off"
-				else
-					eval ${args[$i]}="on"
-				fi
-			else
-				printf "%32s" "New ${blurbs[$i]} > "
-				read ${args[$i]}
-			fi
-			cols[$i]=$Green
-			update #: run update to check for changes to the arrays (eg scanner count change)
+			eval ${args[$i]}="off"
+		else
+			eval ${args[$i]}="on"
 		fi
+	#/ end toggles
+	else
+		printf "%32s" "${blurbs[$i]} ${opts[$i]} > "
+		if [[ $1 = "d" ]]
+		then
+			dish_TF="true"
+			read -s -n 1 ${args[$i]}
+			newkey=${!args[$i]}
+			eatkeys $newkey
+		else
+			read ${args[$i]}
+		fi
+	fi
+	cols[$i]=$Green
+	update #: run update to check for changes to the arrays (eg scanner count change)
 }
 
 init_colors (){
@@ -168,7 +223,7 @@ init_colors (){
 		cols+=($LtBlue)
 		#declare ${keys[$i]}Col=$LtBlue
 	done
-	cols[0]=$Red #: set exp name to warning color
+	
 }
 
 load_parms (){
@@ -181,46 +236,26 @@ load_parms (){
 }
 
 update (){
-	# echo UPDATE
-	# echo $remember_scanners
-	# echo $SCANNERS
-	# read
 	if [[ remember_scanners -ne SCANNERS ]] #: number of scanners has changed
 	#: delete all args related to old scanner count
 	then
-		echo it changed
 		local i j ins ini inj
-		local ins=8 #: insert at arrays index padding
+		local ins=11 #: insert point in arrays (index padding)
 		local xindex=$((remember_scanners*dish_cnt+remember_scanners))
-		# echo "before: ${args[*]}"
+		#: hunt down dish entries and remove them
 		for ((i=((lKeys-1));i>0;i--)) #((i=0;i<lKeys;i++))
 		do
-			echo i $i
 			if [[ ${subs[$i]} = "_dish" ]]
 			then
-				echo got one
 				unset args[$i]
 				unset blurbs[$i]
 				unset keys[$i]
 				unset subs[$i]	
+				unset opts[$i]
+				unset types[$i]
 			fi
 		done
-		read
-		#--replace this
-		# for ((i=((ins+xindex));i>$((ins-));i--))
-		# do
-		# 	unset args[$i]
-		# 	unset blurbs[$i]
-		# 	unset keys[$i]
-		# 	# args=( "${args[@]}" )
-		# 	# blurbs=( "${blurbs[@]}" )			
-		# 	# keys=( "${keys[@]}" )
-		# done
-
-
 		remember_scanners=$SCANNERS #: reset scanner count memory
-
-		# read
 		### insert args based on startup settings
 		for ((i=1;i<$(( SCANNERS+1 ));i++))
 		do
@@ -229,19 +264,28 @@ update (){
 			insert blurbs $(( ini )) "Scanner${i} ID"
 			insert keys $(( ini )) k
 			insert subs $(( ini )) "_dish"
+			insert opts $(( ini )) "[*]"
+			insert types $(( ini )) "str"
+			insert cols $(( ini )) "$LtBlue"
 			((ini++))
 			insert args $(( ini )) TEMPLATE${i}_ID
 			insert blurbs $(( ini )) "Template${i} ID"
 			insert keys $(( ini )) t
 			insert subs $(( ini )) "_dish"
+			insert opts $(( ini )) "[*]"
+			insert types $(( ini )) "str"	
+			insert cols $(( ini )) "$LtBlue"		
 			for ((j=1;j<$(( dish_cnt+1 ));j++))
 			do
 				#! FORMAT for MATH: a=$(( 4 + 5 ))
 				inj=$((ini+j))
 				insert args $(( inj )) "DISH${i}_${j}"
 				insert keys $(( inj )) d
-				insert blurbs $(( inj )) "Dish${j}"
+				insert blurbs $(( inj )) "S${i} Dish${j}"
 				insert subs $(( ini )) "_dish"
+				insert opts $(( ini )) "[-/=/1-9]"
+				insert types $(( ini )) "choice"	
+				insert cols $(( ini )) "$LtBlue"			
 			done
 		done
 	fi
@@ -253,7 +297,6 @@ cronit (){
 	if [ ! -d "$EP" ]; then
 	    mkdir -p $EP
 	fi
-
 	### write out $EXP.exp and last.exp record files
 	echo "
 	writing $EXP.exp:"
@@ -262,7 +305,6 @@ cronit (){
 	do
 	   echo "${arg}=${!arg}" >> $EROOT/last.exp
 	done
-
 	cp $EROOT/last.exp $EP/$EXP.exp
 	echo 
 	echo "working with Directory $EP"
@@ -330,30 +372,35 @@ while [ "$stay_TF" = "true" ]
 			printf "%29s" "${blurbs[$i]} ["
 			echo -e ${Cyan}${keys[$i]}${NC}"] "${cols[$i]}${!args[$i]}${NC}
 		done
-		echo
 		printf '_%.0s' {1..31}
-		echo
+		echo -e "\n"
 		printf "%27s" "set new parameters with ["
 		echo -e ${Cyan}${Italic}"key"${NC}"]" 
 		printf "%25s" "start program ["
 		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
-		echo ""
+		echo
 		printf "%32s" "choice > "
 		
 ##. USER INPUT
 		read -n 1 key
+		echo
 		if [[ $key = "" ]] #: enter key runs cronit function, then exits
 		then
 			cronit
 			exit
 		fi
-		for ((i=0;i<lKeys;i++))
+		for ((i=0;i<lKeys;i++)) #: find all instances of the hotkey
 		do
-			eatkeys ${keys[$i]} #: send the key to check for hotkey
+			if [[ ${keys[$i]} = $key ]]
+			then
+				eatkeys ${keys[$i]} #: send the key to process
+			fi
 		done
 	# sleep 1 #@ this is for debug
 	done #: END WHILE stay_TF LOOP
-}
+} #......................................... end main
+
+lKeys=${#keys[@]} #: establish length of keys array
 
 init_colors
 load_parms
