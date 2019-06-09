@@ -186,14 +186,12 @@ eatinput (){
 	# echo trueopts ${trueopts[$i]}
 	local -a thisopt
 	thisopt=(${trueopts[$i]//// }) #: store options into array, incl type marker
-	specopt=(${trueopts[$i]//// })
 	local op=${opts[$i]:0:1} #: the type marker
 	local limit=1
 	local -a uinput
 	local secret=1
 	local subz=0
 	local q uvalue k
-	# echo thisopt 2 ${thisopt[3]}
 	# echo 
 	# echo i= $i
 	# echo "options for this argument thisopt = ( ${thisopt[@]} )"
@@ -216,41 +214,30 @@ eatinput (){
 	# read -s -n 1 k
 	# return
 
-	# local do_TF=1
-		# echo limit $limit
-		# echo len ${#uinput[@]}
-
 	while [ ${#uinput[@]} -lt $limit ]
 	do
-		# IFS="" #set this so that blank space strings can be entered in args
-		# echo while limit loop
-		if [[ $secret -eq 1 ]] #: single key trigger with readout substitution
+		# echo while limit loop #-- TRACER
+		if [[ $secret -eq 1 ]] #: single key trigger with readout substitution; suppress user key printout
 		then
-			# echo secret loop, read single key
-			# echo k: $k
-			read -s -n 1 k #{!args[$i]} #k #now check for valid key 
-			# echo k now: $k
+			# echo secret loop, read single key #-- TRACER
+			read -s -n 1 k 
+			if [[ $k = "" ]]
+			then
+				echo -e "${Yellow}${Italic}no change${NC}"
+				xcolor=${cols[$i]}
+				return
+			fi
 
-			##: VALID KEY SECTION ----------------------
+			#: VALID KEY SECTION ----------------------
 			for q in "${!thisopt[@]}"
 			do
-				# echo args: $k #{args[$i]}
 				if [[ ${thisopt[$q]} = *$k* ]] #: if key occurs in the valid set
 				then
-					# echo $uvalue
 					uvalue=${svals[$q]} #: user; index matching key stroke
-					# boob="hit"
-					# echo oh ${boob: -1}
-					# echo $uvalue
-					# echo $uvalue
-					# echo ${uvalue: -1}
 					if [[ ${uvalue: -1} = ^ ]] #: add the key pressed to the final ARG string
 					then
 						uvalue=${uvalue::-1}$k
 					fi
-					# echo ${specopt[$q]}
-					# # echo ${thisopt[$q]}
-					# echo $k
 					echo $uvalue
 					limit=-1
 				else
@@ -275,17 +262,20 @@ eatinput (){
 		# 	a=a
 		# fi
 	done #: character input limit hit, or enter key
+
 	#!! need enter key exit still
 	#!! readkey must be -n 1 for this to work
 	if [[ $subz -eq 1 ]] #- temporary
 	then
-		# unset IFS
-		# IFS=""
-		# echo -------------------
-		# echo $uvalue #{svals[$uvalue]}
+		if [[ ${args[$i]} = $uvalue ]]
+		then
+			xcolor=${cols[$i]}
+		else
+			xcolor=${Green}
+		fi
 		eval "${args[$i]}"="$uvalue" #: set the EXP variables
 	fi
-	# echo "limit reached" #- TRACER
+	# echo "limit reached" #-- TRACER
 
 }
 eatkeys (){ #: digest user key inputs
@@ -387,7 +377,7 @@ eatkeys (){ #: digest user key inputs
 	# 		read ${args[$i]}
 	# 	fi
 	# fi
-	cols[$i]=$Green
+	cols[$i]=$xcolor
 	update #: run update to check for changes to the arrays (eg scanner count change)
 }
 
