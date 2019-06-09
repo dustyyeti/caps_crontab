@@ -55,22 +55,22 @@ declare -a opts
 declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
 declare -a trueopts
 
-keys=(e s i r z x y l a f o)
+keys=(e s i r z x y l a p o f q)
 
 opts+=("*")
-opts+=("i/1..9")
+opts+=("C/1..9")
 opts+=("I/minutes")
 opts+=("C/100/300/600")
-opts+=("T/on/off")
-opts+=("on/off")
+opts+=("T")
+opts+=("T")
 opts+=("seconds")
-opts+=("on/off")
+opts+=("T")
 opts+=("*")
 opts+=("*")
 opts+=("*")
 
 subvals+=("")
-subvals+=("")
+subvals+=("C/^")
 subvals+=("")
 subvals+=("")
 subvals+=("")
@@ -82,7 +82,7 @@ subvals+=("")
 subvals+=("")
 
 trueopts+=("")
-trueopts+=("")
+trueopts+=("C/123456789")
 trueopts+=("")
 trueopts+=("")
 trueopts+=("")
@@ -116,6 +116,8 @@ blurbs+=("* use lights")
 blurbs+=("test animals")
 blurbs+=("food sources")
 blurbs+=("note other setup")
+blurbs+=("Load from file")
+blurbs+=("QUIT program")
 
 subs+=("_exp")
 subs+=("_exp")
@@ -128,6 +130,8 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
+subs+=("_menu")
+subs+=("_menu")
 
 # types+=("str")	#EXP
 # types+=("int")		#SCANNERS
@@ -153,6 +157,8 @@ subs+=("_exp")
 
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
 subblurbs+=("${On_IBlack}___________Dish Setup__________${NC}")
+subblurbs+=("${BPurple}`printf '=%.0s' {1..31}`${NC}\c")
+# subblurbs+=("${Yellow}menu${NC}")
 subblurbs+=("${BCyan}${Inv}____Neopixel Light Program_____${NC}")
 
 ##. flow booleans
@@ -177,8 +183,8 @@ insert(){
 
 spacer (){ #: helps with UI building
 	echo
-	echo -e ${subblurbs[$isub]}
-	printf '.%.0s' {1..31} #....................
+	echo -e "${subblurbs[$isub]}"
+	# printf '.%.0s' {1..31} #....................
 	echo
 }
 eatinput (){
@@ -197,12 +203,15 @@ eatinput (){
 	# echo "options for this argument thisopt = ( ${thisopt[@]} )"
 	# echo op $op
 	case $op in
-		"C")
+		"C")			#: CHOICE
 			IFS="/"
 			subz=1
 			set -- "${subvals[$i]}" 
 			local -a svals=($*)
 			unset IFS
+			;;
+		"T")			#: TOGGLE
+			echo its a T
 			;;
 		"*")
 			limit=30 #: arbitray high limit for string entry
@@ -279,10 +288,18 @@ eatinput (){
 
 }
 eatkeys (){ #: digest user key inputs
-	# echo eatkeys function
-	if [[ $key = "x" ]]
+	if [[ $key = "q" ]]
 	then
-		exit
+		# printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
+		echo -e ${Red}
+		printf "%32s" "q again to quit > "
+		read -n 1 key
+		if [[ $key = "q" ]]
+		then
+			exit
+		else
+			return
+		fi
 	fi
 	if [[ $key = "" ]] #enter
 	then
@@ -290,10 +307,23 @@ eatkeys (){ #: digest user key inputs
 		sleep 1
 		return
 	fi
-	myvar=abc
+	: routine for toggles
+	if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
+	# if [[ ${opts[$i]} = "[off/on]" ]] 
+	# if [[ ${types[$i]} = "tog" ]] 
+	then				
+		if [[ ${!args[$i]} = "on" ]]
+		then
+			eval ${args[$i]}="off"
+		else
+			eval ${args[$i]}="on"
+		fi
+		cols[$i]=${Green}
+		return
+	fi # end toggles
 	size=$((${#opts[$i]}+2))
-	# size=(( "${#opts[$i]}-2)) 
-	printf "%$((32-$size))s" "${blurbs[$i]} [" #[${opts[$i]:2}] > "
+
+	printf "%$((34-$size))s" "${blurbs[$i]} [" #[${opts[$i]:2}] > "
 	echo -e "${Cyan}${Italic}${opts[$i]:2}${NC}] > \c"
 
 		# if [[ $1 = "d" ]]
@@ -353,18 +383,6 @@ eatkeys (){ #: digest user key inputs
 	# 	return
 	# fi
 
-	#: routine for toggles
-	# if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
-	# if [[ ${opts[$i]} = "[off/on]" ]] 
-	# if [[ ${types[$i]} = "tog" ]] 
-	# then				
-	# 	if [[ ${!args[$i]} = "on" ]]
-	# 	then
-	# 		eval ${args[$i]}="off"
-	# 	else
-	# 		eval ${args[$i]}="on"
-	# 	fi
-	#/ end toggles
 	# else
 	# 	printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
 	# 	if [[ $1 = "d" ]]
@@ -421,7 +439,7 @@ update (){
 		done
 		remember_scanners=$SCANNERS #: reset scanner count memory
 		### insert args based on startup settings
-		for ((i=1;i<$(( SCANNERS+1 ));i++))
+		for ((i=1;i<$(( SCANNERS+1 ));i++)) #: add features related to scanner/multiple
 		do
 			ini=$((ins+((i-1))*2+((i-1))*dish_cnt))
 			insert args $(( ini )) SCANNER${i}_ID
@@ -454,7 +472,6 @@ update (){
 				insert cols $(( inj )) "$LtBlue"
 				insert subvals $(( inj )) "C/neg-control/pos-control/exp-group^"
 				insert trueopts $(( inj )) "C/-/=/123456789"
-
 			done
 		done
 	fi
@@ -541,14 +558,14 @@ while [ "$stay_TF" = "true" ]
 			printf "%29s" "${blurbs[$i]} ["
 			echo -e ${Cyan}${keys[$i]}${NC}"] "${cols[$i]}${!args[$i]}${NC}
 		done
-		printf '_%.0s' {1..31}
+		# printf '_%.0s' {1..31}
 		echo -e "\n"
-		printf "%25s" "set new parameters with ["
+		printf "%27s" "set new parameters with ["
 		echo -e ${Cyan}${Italic}"key"${NC}"]" 
-		printf "%23s" "start program ["
+		printf "%25s" "start program ["
 		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
 		echo
-		printf "%32s" "choice > "
+		printf "%34s" "choice > "
 		
 ##. USER INPUT
 		read -n 1 key
