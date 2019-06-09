@@ -182,7 +182,6 @@ spacer (){ #: helps with UI building
 	echo
 }
 eatinput (){
-	# IFS=""
 	# echo eatinput function
 	# echo trueopts ${trueopts[$i]}
 	local -a thisopt
@@ -203,13 +202,12 @@ eatinput (){
 	case $op in
 		"C")
 			# limit=$(( ${#thisopt[@]} - 1 ))  #: -1 to discount type marker
+			# echo case C
 			IFS="/"
 			subz=1
 			set -- "${subvals[$i]}" 
 			local -a svals=($*)
 			unset IFS
-			# echo what is happening.................
-			# echo svals ${svals[@]}
 			;;
 		"*")
 			limit=30 #: arbitray high limit for string entry
@@ -227,25 +225,26 @@ eatinput (){
 
 	while [ ${#uinput[@]} -lt $limit ]
 	do
+		# IFS="" #set this so that blank space strings can be entered in args
+		# echo while limit loop
 		if [[ $secret -eq 1 ]] #: single key trigger with readout substitution
 		then
 			# echo secret loop, read single key
 			# echo k: $k
-			read -s -n 1 k #now check for valid key 
+			read -s -n 1 k #{!args[$i]} #k #now check for valid key 
 			# echo k now: $k
-			##: VALID KEY SECTION
 
+			##: VALID KEY SECTION ----------------------
 			for q in "${!thisopt[@]}"
 			do
-				# echo q= $q
-				# echo once more ${thisopt[@]}
-				# echo or how about ${thisopt[$q]}
+				# echo args: $k #{args[$i]}
 				if [[ ${thisopt[$q]} = *$k* ]]
 				then
-					uvalue=$q #: user; index matching key stroke
+					uvalue=${svals[$q]} #: user; index matching key stroke
 					# echo ${thisopt[$q]}
 					# echo $k
-					echo ${svals[$q]}
+					echo $uvalue
+					limit=-1
 				else
 					#reject input, don't leave
 					# echo not this one
@@ -254,26 +253,49 @@ eatinput (){
 			done
 		else #: not a single key trigger
 			read ${args[$i]}
-			limit=0
+			limit=-1
 		fi #: end of secret
 
 		##: loop through single key inputs, add to cumulative array
 		#! temp disable,
 
-		if [[ ${opt[*]} =~ $k ]]
-		then
-			uinput+=(k)
-		else
-			return
-		fi
+		# if [[ ${opt[*]} =~ $k ]]
+		# then
+		# 	uinput+=(k)
+		# else
+		# 	return
+		# 	a=a
+		# fi
 	done #: character input limit hit, or enter key
 	#!! need enter key exit still
-
+	#!! readkey must be -n 1 for this to work
 	if [[ $subz -eq 1 ]] #- temporary
 	then
-		echo ${svals[$uvalue]}
+		# unset IFS
+		# IFS=""
+		# echo -------------------
+		# echo $uvalue #{svals[$uvalue]}
+		# let ${args[$i]}=$uvalue
+
+		# ${!args[2]}=$uvalue # <-- def not this one
+
+		eval "${args[$i]}"="$uvalue"
+		# DISH1_1=$uvalue
+		# echo ${args[$i]}
+		# echo ${!args[$i]}
+
+
+		# echo ${!args[$i]}
+		# usub="args[$i]"
+		# ${usub}=$uvalue
+		# echo ${!args[$i]}=$uvalue
+		# vsub="v0"
+		# let ${vsub}=8
+		# echo "see? "$v0
+
 	fi
-	echo "limit reached"
+	# unset IFS
+	# echo "limit reached" #- TRACER
 
 	
 
@@ -428,6 +450,7 @@ update (){
 			insert opts $(( ini )) "*"
 			insert cols $(( ini )) "$LtBlue"
 			insert trueopts $(( ini )) ""
+			insert subvals $(( ini )) ""
 
 			((ini++))
 			insert args $(( ini )) TEMPLATE${i}_ID
@@ -437,6 +460,7 @@ update (){
 			insert opts $(( ini )) "*"
 			insert cols $(( ini )) "$LtBlue"
 			insert trueopts $(( ini )) ""
+			insert subvals $(( ini )) ""
 			for ((j=1;j<$(( dish_cnt+1 ));j++))
 			do
 				#! FORMAT for MATH: a=$(( 4 + 5 ))
@@ -447,7 +471,7 @@ update (){
 				insert subs $(( inj )) "_dish"
 				insert opts $(( inj )) "C/-/=/1..9"
 				insert cols $(( inj )) "$LtBlue"
-				insert subvals $(( inj )) "C/neg control/pos control/exp group*"
+				insert subvals $(( inj )) "C/neg_control/pos_control/exp*"
 				insert trueopts $(( inj )) "C/-/=/123456789"
 
 			done
