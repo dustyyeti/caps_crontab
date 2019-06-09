@@ -1,6 +1,6 @@
 #exp parameters
-EXP=boo
-SCANNERS=2
+EXP=foo
+SCANNERS=1
 INT=5
 RES=300
 REF=off

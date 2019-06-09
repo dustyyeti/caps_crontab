@@ -49,21 +49,49 @@ declare -a blurbs
 declare -a subs
 declare -a keys
 declare -a cols
-declare -a types
 declare -a subblurbs
 declare -a func
 declare -a opts
+declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
+declare -a trueopts
 
 keys=(e s i r z x y l a f o)
 
-opts+=("S/*")
-opts+=("i/1-9")
+opts+=("*")
+opts+=("i/1..9")
 opts+=("I/minutes")
 opts+=("C/100/300/600")
 opts+=("T/on/off")
 opts+=("on/off")
 opts+=("seconds")
 opts+=("on/off")
+opts+=("*")
+opts+=("*")
+opts+=("*")
+
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+subvals+=("")
+
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
+trueopts+=("")
 
 args+=("EXP")
 args+=("SCANNERS")
@@ -101,17 +129,17 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 
-types+=("str")	#EXP
-types+=("int")		#SCANNERS
-types+=("int") 		#INT
-types+=("choice")		#RES
-types+=("tog")		#REF
-types+=("tog")	#XFER
-types+=("int")		#DELAY
-types+=("tog")	#LIGHTS
-types+=("str")
-types+=("str")
-types+=("str")
+# types+=("str")	#EXP
+# types+=("int")		#SCANNERS
+# types+=("int") 		#INT
+# types+=("choice")		#RES
+# types+=("tog")		#REF
+# types+=("tog")	#XFER
+# types+=("int")		#DELAY
+# types+=("tog")	#LIGHTS
+# types+=("str")
+# types+=("str")
+# types+=("str")
 
 # func+=("")
 # func+=("update")
@@ -153,26 +181,137 @@ spacer (){ #: helps with UI building
 	printf '.%.0s' {1..31} #....................
 	echo
 }
-limitkeys (){
+eatinput (){
+	# IFS=""
+	# echo eatinput function
+	# echo trueopts ${trueopts[$i]}
+	local -a thisopt
+	thisopt=(${trueopts[$i]//// }) #: store options into array, incl type marker
+	# echo thisopt 2 ${thisopt[3]}
+	# echo 
+	# echo i= $i
+	# echo "options for this argument thisopt = ( ${thisopt[@]} )"
+	local op=${opts[$i]:0:1} #: the type marker
+	# echo op $op
+	local limit=1
+	local -a uinput
+	local secret=1
+	local subz=0
+	local q
+	local uvalue
+	local k
+	case $op in
+		"C")
+			# limit=$(( ${#thisopt[@]} - 1 ))  #: -1 to discount type marker
+			IFS="/"
+			subz=1
+			set -- "${subvals[$i]}" 
+			local -a svals=($*)
+			unset IFS
+			# echo what is happening.................
+			# echo svals ${svals[@]}
+			;;
+		"*")
+			limit=30 #: arbitray high limit for string entry
+			secret=0
+			;;
+		*)
+			;;
+	esac
+	# read -s -n 1 k
+	# return
+
+	# local do_TF=1
+		# echo limit $limit
+		# echo len ${#uinput[@]}
+
+	while [ ${#uinput[@]} -lt $limit ]
+	do
+		if [[ $secret -eq 1 ]] #: single key trigger with readout substitution
+		then
+			# echo secret loop, read single key
+			# echo k: $k
+			read -s -n 1 k #now check for valid key 
+			# echo k now: $k
+			##: VALID KEY SECTION
+
+			for q in "${!thisopt[@]}"
+			do
+				# echo q= $q
+				# echo once more ${thisopt[@]}
+				# echo or how about ${thisopt[$q]}
+				if [[ ${thisopt[$q]} = *$k* ]]
+				then
+					uvalue=$q #: user; index matching key stroke
+					# echo ${thisopt[$q]}
+					# echo $k
+					echo ${svals[$q]}
+				else
+					#reject input, don't leave
+					# echo not this one
+					a=a
+				fi
+			done
+		else #: not a single key trigger
+			read ${args[$i]}
+			limit=0
+		fi #: end of secret
+
+		##: loop through single key inputs, add to cumulative array
+		#! temp disable,
+
+		if [[ ${opt[*]} =~ $k ]]
+		then
+			uinput+=(k)
+		else
+			return
+		fi
+	done #: character input limit hit, or enter key
+	#!! need enter key exit still
+
+	if [[ $subz -eq 1 ]] #- temporary
+	then
+		echo ${svals[$uvalue]}
+	fi
+	echo "limit reached"
+
+	
+
 
 }
 eatkeys (){ #: digest user key inputs
-	if [[ $1 = "" ]] #enter
+	# echo eatkeys function
+	if [[ $key = "x" ]]
+	then
+		exit
+	fi
+	if [[ $key = "" ]] #enter
 	then
 		echo no change
 		sleep 1
 		return
 	fi
-	local opt=(${opts[$2]//// }) #${opts[$2]}
-	local op=${opt[0]}
-	case $op in
-		"C")
-			echo choice!
-			
-			;;
-		*)
-			;;
-	esac
+	printf "%32s" "${blurbs[$i]} [${opts[(( $i))]}] > "
+		# if [[ $1 = "d" ]]
+		# then
+		# 	dish_TF="true"
+		# 	read -s -n 1 ${args[$i]}
+		# 	newkey=${!args[$i]}
+		# 	eatkeys $newkey
+		# else
+		# 	read ${args[$i]}
+		# fi
+	eatinput
+
+	# local op=${opt[0]}
+	# case $op in
+	# 	"C")
+	# 		echo choice!
+
+	# 		;;
+	# 	*)
+	# 		;;
+	# esac
 	# if [[ ${opt:0:1} = "C" ]] #: limited options for input to choose from
 	# then
 	# 	# local limits=(${opt//// })
@@ -183,57 +322,57 @@ eatkeys (){ #: digest user key inputs
 
 	# IN="bla@some.com;john@home.com"
 	# arrIN=(${IN//;/ })
-	if [[ dish_TF = "true NOT" ]] 
-	then
-		case $1 in
- 			"")
-				echo no change
-				;;
-	    	" ")
-				echo no change
-				;;
-	    	=)
-				# ${args[$i]}="POS CTRL" && echo ${args[$i]}
-				echo pos control #| read args[$i]
-				;;
-	    	-)
-				echo neg control
-				;;
-			1|2|3|4|5|6|7|8|9)
-				echo exp grp $newkey
-				;;
-		     *)
-		        echo nada
-	          	;;
-		esac
-		dish_TF="false"
-		return
-	fi
+	# if [[ dish_TF = "true NOT" ]] 
+	# then
+	# 	case $1 in
+ # 			"")
+	# 			echo no change
+	# 			;;
+	#     	" ")
+	# 			echo no change
+	# 			;;
+	#     	=)
+	# 			# ${args[$i]}="POS CTRL" && echo ${args[$i]}
+	# 			echo pos control #| read args[$i]
+	# 			;;
+	#     	-)
+	# 			echo neg control
+	# 			;;
+	# 		1|2|3|4|5|6|7|8|9)
+	# 			echo exp grp $newkey
+	# 			;;
+	# 	     *)
+	# 	        echo nada
+	#           	;;
+	# 	esac
+	# 	dish_TF="false"
+	# 	return
+	# fi
 
 	#: routine for toggles
 	# if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
 	# if [[ ${opts[$i]} = "[off/on]" ]] 
-	if [[ ${types[$i]} = "tog" ]] 
-	then				
-		if [[ ${!args[$i]} = "on" ]]
-		then
-			eval ${args[$i]}="off"
-		else
-			eval ${args[$i]}="on"
-		fi
+	# if [[ ${types[$i]} = "tog" ]] 
+	# then				
+	# 	if [[ ${!args[$i]} = "on" ]]
+	# 	then
+	# 		eval ${args[$i]}="off"
+	# 	else
+	# 		eval ${args[$i]}="on"
+	# 	fi
 	#/ end toggles
-	else
-		printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
-		if [[ $1 = "d" ]]
-		then
-			dish_TF="true"
-			read -s -n 1 ${args[$i]}
-			newkey=${!args[$i]}
-			eatkeys $newkey
-		else
-			read ${args[$i]}
-		fi
-	fi
+	# else
+	# 	printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
+	# 	if [[ $1 = "d" ]]
+	# 	then
+	# 		dish_TF="true"
+	# 		read -s -n 1 ${args[$i]}
+	# 		newkey=${!args[$i]}
+	# 		eatkeys $newkey
+	# 	else
+	# 		read ${args[$i]}
+	# 	fi
+	# fi
 	cols[$i]=$Green
 	update #: run update to check for changes to the arrays (eg scanner count change)
 }
@@ -287,16 +426,17 @@ update (){
 			insert keys $(( ini )) k
 			insert subs $(( ini )) "_dish"
 			insert opts $(( ini )) "*"
-			insert types $(( ini )) "str"
 			insert cols $(( ini )) "$LtBlue"
+			insert trueopts $(( ini )) ""
+
 			((ini++))
 			insert args $(( ini )) TEMPLATE${i}_ID
 			insert blurbs $(( ini )) "Template${i} ID"
 			insert keys $(( ini )) t
 			insert subs $(( ini )) "_dish"
 			insert opts $(( ini )) "*"
-			insert types $(( ini )) "str"	
-			insert cols $(( ini )) "$LtBlue"		
+			insert cols $(( ini )) "$LtBlue"
+			insert trueopts $(( ini )) ""
 			for ((j=1;j<$(( dish_cnt+1 ));j++))
 			do
 				#! FORMAT for MATH: a=$(( 4 + 5 ))
@@ -304,10 +444,12 @@ update (){
 				insert args $(( inj )) "DISH${i}_${j}"
 				insert keys $(( inj )) d
 				insert blurbs $(( inj )) "S${i} Dish${j}"
-				insert subs $(( ini )) "_dish"
-				insert opts $(( ini )) "C/-/=/1-9"
-				insert types $(( ini )) "choice"	
-				insert cols $(( ini )) "$LtBlue"			
+				insert subs $(( inj )) "_dish"
+				insert opts $(( inj )) "C/-/=/1..9"
+				insert cols $(( inj )) "$LtBlue"
+				insert subvals $(( inj )) "C/neg control/pos control/exp group*"
+				insert trueopts $(( inj )) "C/-/=/123456789"
+
 			done
 		done
 	fi
@@ -415,7 +557,7 @@ while [ "$stay_TF" = "true" ]
 		do
 			if [[ ${keys[$i]} = $key ]]
 			then
-				eatkeys ${keys[$i]} $i #: send the key from array and the index to process
+				eatkeys #: send the index of the key from allowable options to process
 			fi
 		done
 	# sleep 1 #@ this is for debug
@@ -428,3 +570,10 @@ init_colors
 load_parms
 update
 main "$@"
+
+####!!!  nice tricks ----------------------------------------------------------------
+# for key in "${!a[@]}"     # expand the array indexes to a list of words
+# do 
+#   map[${a[$key]}]="$key"  # exchange the value ${a[$key]} with the index $key
+# done
+#-- except it doesn't work!!!!
