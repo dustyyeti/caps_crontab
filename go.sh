@@ -186,23 +186,20 @@ eatinput (){
 	# echo trueopts ${trueopts[$i]}
 	local -a thisopt
 	thisopt=(${trueopts[$i]//// }) #: store options into array, incl type marker
-	# echo thisopt 2 ${thisopt[3]}
-	# echo 
-	# echo i= $i
-	# echo "options for this argument thisopt = ( ${thisopt[@]} )"
+	specopt=(${trueopts[$i]//// })
 	local op=${opts[$i]:0:1} #: the type marker
-	# echo op $op
 	local limit=1
 	local -a uinput
 	local secret=1
 	local subz=0
-	local q
-	local uvalue
-	local k
+	local q uvalue k
+	# echo thisopt 2 ${thisopt[3]}
+	# echo 
+	# echo i= $i
+	# echo "options for this argument thisopt = ( ${thisopt[@]} )"
+	# echo op $op
 	case $op in
 		"C")
-			# limit=$(( ${#thisopt[@]} - 1 ))  #: -1 to discount type marker
-			# echo case C
 			IFS="/"
 			subz=1
 			set -- "${subvals[$i]}" 
@@ -238,10 +235,21 @@ eatinput (){
 			for q in "${!thisopt[@]}"
 			do
 				# echo args: $k #{args[$i]}
-				if [[ ${thisopt[$q]} = *$k* ]]
+				if [[ ${thisopt[$q]} = *$k* ]] #: if key occurs in the valid set
 				then
+					# echo $uvalue
 					uvalue=${svals[$q]} #: user; index matching key stroke
-					# echo ${thisopt[$q]}
+					# boob="hit"
+					# echo oh ${boob: -1}
+					# echo $uvalue
+					# echo $uvalue
+					# echo ${uvalue: -1}
+					if [[ ${uvalue: -1} = ^ ]] #: add the key pressed to the final ARG string
+					then
+						uvalue=${uvalue::-1}$k
+					fi
+					# echo ${specopt[$q]}
+					# # echo ${thisopt[$q]}
 					# echo $k
 					echo $uvalue
 					limit=-1
@@ -275,30 +283,9 @@ eatinput (){
 		# IFS=""
 		# echo -------------------
 		# echo $uvalue #{svals[$uvalue]}
-		# let ${args[$i]}=$uvalue
-
-		# ${!args[2]}=$uvalue # <-- def not this one
-
-		eval "${args[$i]}"="$uvalue"
-		# DISH1_1=$uvalue
-		# echo ${args[$i]}
-		# echo ${!args[$i]}
-
-
-		# echo ${!args[$i]}
-		# usub="args[$i]"
-		# ${usub}=$uvalue
-		# echo ${!args[$i]}=$uvalue
-		# vsub="v0"
-		# let ${vsub}=8
-		# echo "see? "$v0
-
+		eval "${args[$i]}"="$uvalue" #: set the EXP variables
 	fi
-	# unset IFS
 	# echo "limit reached" #- TRACER
-
-	
-
 
 }
 eatkeys (){ #: digest user key inputs
@@ -313,7 +300,12 @@ eatkeys (){ #: digest user key inputs
 		sleep 1
 		return
 	fi
-	printf "%32s" "${blurbs[$i]} [${opts[(( $i))]}] > "
+	myvar=abc
+	size=$((${#opts[$i]}+2))
+	# size=(( "${#opts[$i]}-2)) 
+	printf "%$((32-$size))s" "${blurbs[$i]} [" #[${opts[$i]:2}] > "
+	echo -e "${Cyan}${Italic}${opts[$i]:2}${NC}] > \c"
+
 		# if [[ $1 = "d" ]]
 		# then
 		# 	dish_TF="true"
@@ -404,9 +396,8 @@ init_colors (){
 	for ((i=0;i<lKeys;i++))
 	do
 		cols+=($LtBlue)
-		#declare ${keys[$i]}Col=$LtBlue
 	done
-	
+	cols[0]=$Red
 }
 
 load_parms (){
@@ -471,7 +462,7 @@ update (){
 				insert subs $(( inj )) "_dish"
 				insert opts $(( inj )) "C/-/=/1..9"
 				insert cols $(( inj )) "$LtBlue"
-				insert subvals $(( inj )) "C/neg_control/pos_control/exp*"
+				insert subvals $(( inj )) "C/neg-control/pos-control/exp-group^"
 				insert trueopts $(( inj )) "C/-/=/123456789"
 
 			done
@@ -562,9 +553,9 @@ while [ "$stay_TF" = "true" ]
 		done
 		printf '_%.0s' {1..31}
 		echo -e "\n"
-		printf "%27s" "set new parameters with ["
+		printf "%25s" "set new parameters with ["
 		echo -e ${Cyan}${Italic}"key"${NC}"]" 
-		printf "%25s" "start program ["
+		printf "%23s" "start program ["
 		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
 		echo
 		printf "%32s" "choice > "
