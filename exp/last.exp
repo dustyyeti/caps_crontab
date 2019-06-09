@@ -1,15 +1,15 @@
 #exp parameters
+PROGRAM=
 EXP=foo
 SCANNERS=2
 INT=5
 RES=300
 REF=off
-XFER=on
-DELAY=6
+XFER=off
 LIGHTS=off
-SPECIES=slimes, yeast
-FOODS=oat flakes
-OTHER=oats in ring
+SPECIES=
+FOODS=
+OTHER=
 SCANNER1_ID=cannon3
 TEMPLATE1_ID=s2
 DISH1_1=neg-control

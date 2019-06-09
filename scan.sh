@@ -5,7 +5,7 @@ export APP_SLACK_WEBHOOK=https://hooks.slack.com/services/T40G8FH6D/BJC3XSQBV/ot
 
 RESOLUTION=$1
 LOCAL_DIR=$2
-DELAY=$3
+DELAY=6
 
 ENUM=$(($(cat $LOCAL_DIR/count)+1))
 EXPERIMENT_BASENAME=${LOCAL_DIR##*/}

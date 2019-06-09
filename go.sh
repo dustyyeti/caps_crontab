@@ -55,7 +55,7 @@ declare -a opts
 declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
 declare -a trueopts
 
-keys=(e s i r z x y l a p o f q)
+keys=(e s i r z x l a p o f q)
 
 opts+=("*")
 opts+=("C/1..9")
@@ -91,7 +91,6 @@ trueopts+=("")
 trueopts+=("")
 trueopts+=("")
 trueopts+=("")
-trueopts+=("")
 
 args+=("EXP")
 args+=("SCANNERS")
@@ -99,7 +98,6 @@ args+=("INT")
 args+=("RES")
 args+=("REF")
 args+=("XFER")
-args+=("DELAY")
 args+=("LIGHTS")
 args+=("SPECIES")
 args+=("FOODS")
@@ -111,7 +109,6 @@ blurbs+=("Scan Interval Time")
 blurbs+=("Scan resolution")
 blurbs+=("* REF scan every frame")
 blurbs+=("* server file transfer")
-blurbs+=("series scan delay")
 blurbs+=("* use lights")
 blurbs+=("test animals")
 blurbs+=("food sources")
@@ -129,30 +126,9 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
-subs+=("_exp")
 subs+=("_menu")
 subs+=("_menu")
 
-# types+=("str")	#EXP
-# types+=("int")		#SCANNERS
-# types+=("int") 		#INT
-# types+=("choice")		#RES
-# types+=("tog")		#REF
-# types+=("tog")	#XFER
-# types+=("int")		#DELAY
-# types+=("tog")	#LIGHTS
-# types+=("str")
-# types+=("str")
-# types+=("str")
-
-# func+=("")
-# func+=("update")
-# func+=("")
-# func+=("")
-# func+=("")
-# func+=("")
-# func+=("")
-# func+=("")
 
 
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
@@ -276,18 +252,21 @@ eatinput (){
 	#!! readkey must be -n 1 for this to work
 	if [[ $subz -eq 1 ]] #- temporary
 	then
-		if [[ ${args[$i]} = $uvalue ]]
-		then
-			xcolor=${cols[$i]}
-		else
-			xcolor=${Green}
-		fi
 		eval "${args[$i]}"="$uvalue" #: set the EXP variables
+	fi
+	if [[ ${args[$i]} = $uvalue ]]
+	then
+		xcolor=${cols[$i]}
+	else
+		xcolor=${Green}
 	fi
 	# echo "limit reached" #-- TRACER
 
 }
 eatkeys (){ #: digest user key inputs
+	echo "(------eatkeys function-----)"; #-- TRACER
+	echo key: $key; sleep 1 #-- TRACER
+	bob=0
 	if [[ $key = "q" ]]
 	then
 		# printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
@@ -307,7 +286,7 @@ eatkeys (){ #: digest user key inputs
 		sleep 1
 		return
 	fi
-	: routine for toggles
+	#: routine for toggles
 	if [[ ${blurbs[$i]:0:1} = "*" ]] #: if first character is *
 	# if [[ ${opts[$i]} = "[off/on]" ]] 
 	# if [[ ${types[$i]} = "tog" ]] 
@@ -319,6 +298,13 @@ eatkeys (){ #: digest user key inputs
 			eval ${args[$i]}="on"
 		fi
 		cols[$i]=${Green}
+		if [[ $key = ${keys[6]} ]] #: lights have toggled
+		then
+			echo if key = ${keys[6]}, go to update; sleep 1
+			echo value: ${!args[6]}
+			update ${keys[6]}
+
+		fi
 		return
 	fi # end toggles
 	size=$((${#opts[$i]}+2))
@@ -396,8 +382,11 @@ eatkeys (){ #: digest user key inputs
 	# 	fi
 	# fi
 	cols[$i]=$xcolor
-	update #: run update to check for changes to the arrays (eg scanner count change)
-}
+
+	echo "^ ^ ^ ^ end eatkeys function ^ ^ ^ ^"
+	# echo then send to update; sleep 2
+	update $key #: run update to check for changes to the arrays (eg scanner count change)
+} #. end eatkeys()
 
 init_colors (){
 ### use loop to setup initial colors
@@ -418,11 +407,13 @@ load_parms (){
 }
 
 update (){
-	if [[ remember_scanners -ne SCANNERS ]] #: number of scanners has changed
+	echo "(------update function-----)"; sleep 0 #-- TRACER
+	echo parm: $1 #-- TRACER
+	if [[ remember_scanners -ne SCANNERS && $1 = ${keys[1]} ]] #: number of scanners has changed
 	#: delete all args related to old scanner count
 	then
 		local i j ins ini inj
-		local ins=11 #: insert point in arrays (index padding)
+		local ins=10 #: insert point in arrays (index padding)
 		local xindex=$((remember_scanners*dish_cnt+remember_scanners))
 		#: hunt down dish entries and remove them
 		for ((i=((lKeys-1));i>0;i--)) #((i=0;i<lKeys;i++))
@@ -475,6 +466,36 @@ update (){
 			done
 		done
 	fi
+	if [[ $1 = ${keys[6]} ]]
+	then
+		#: hunt down dish entries and remove them
+		# for ((i=((lKeys-1));i>0;i--)) #((i=0;i<lKeys;i++))
+		# do
+		# 	if [[ ${subs[$i]} = "_light" ]]
+		# 	then
+		# 		unset args[$i]
+		# 		unset blurbs[$i]
+		# 		unset keys[$i]
+		# 		unset subs[$i]	
+		# 		unset opts[$i]
+		# 		unset types[$i]
+		# 	fi
+		# done
+		if [[ ${args[6]} = "on" ]]
+		then
+			ink=${#args[@]}
+			insert args $(( ink )) "PROGRAM"
+			insert keys $(( ink )) P
+			insert blurbs $(( ink )) "Light Program"
+			insert subs $(( ink )) "_light"
+			insert opts $(( ink )) "C/b"
+			insert cols $(( ink )) "$LtBlue"
+			insert subvals $(( ink )) "C/constant-blue"
+			insert trueopts $(( ink )) "C/b"
+		fi
+	fi
+	echo "^ ^ ^ ^ end update function ^ ^ ^ ^"; sleep 0
+	return
 }
 
 cronit (){
@@ -514,10 +535,10 @@ cronit (){
 
 	[[ $REF > 0 ]] && \
 
-	printf "\$sp/scan.sh $REF \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
+	printf "\$sp/scan.sh $REF \$ep 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 	[[ $LIGHTS == "on" ]] && \
 	printf "\$sp/lights.sh off 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
-	printf "\$sp/scan.sh $RES \$ep $DELAY 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
+	printf "\$sp/scan.sh $RES \$ep 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 	[[ $LIGHTS == "on" ]] && \
 	printf "\$sp/lights.sh on 2>&1 | tee -a \$ep/LOG; " >> $EP/xtab
 	[[ $XFER == "on" ]] && \
@@ -533,10 +554,14 @@ cronit (){
 
 main (){
 ### main looop --------------------------------------------
-while [ "$stay_TF" = "true" ] 
+echo "(------MAIN MAIN MAIN -----)"; sleep 1 #-- TRACER
+while [ "$stay_TF" = "true" ]
+	echo inside the while loop
+
 	lKeys=${#keys[@]} #: establish length of keys array
 	do
-		clear
+		
+		# clear #!! temp disable for TRACER
 		echo -e "${BPurple}"
 		printf " CREATE NEW CRONTAB EXPERIMENT "
 		echo
@@ -547,7 +572,7 @@ while [ "$stay_TF" = "true" ]
 			if [[ $buf != ${subs[$i]} ]] 
 			then
 				buf=${subs[$i]} #: store the subsection in buf
-				if ! [[ $buf = "_lights" && $LIGHTS = "off" ]]
+				if ! [[ $buf = "_light" && $LIGHTS = "off" ]]
 				then
 					spacer isub
 					((isub++))
@@ -565,9 +590,9 @@ while [ "$stay_TF" = "true" ]
 		printf "%25s" "start program ["
 		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
 		echo
-		printf "%34s" "choice > "
-		
+
 ##. USER INPUT
+		printf "%34s" "choice > "
 		read -n 1 key
 		echo
 		if [[ $key = "" ]] #: enter key runs cronit function, then exits
@@ -577,10 +602,15 @@ while [ "$stay_TF" = "true" ]
 		fi
 		for ((i=0;i<lKeys;i++)) #: find all instances of the hotkey
 		do
+			# echo i=$i, for lKeys loop #-- TRACER
 			if [[ ${keys[$i]} = $key ]]
 			then
+				echo keys index $i value : ${keys[$i]}
+				echo "(main>) send to eatkeys"
 				eatkeys #: send the index of the key from allowable options to process
+				# echo back from eatkeys, inside yes to valid loop
 			fi
+			# echo bottom of lKeys loop
 		done
 	# sleep 1 #@ this is for debug
 	done #: END WHILE stay_TF LOOP
@@ -590,7 +620,7 @@ lKeys=${#keys[@]} #: establish length of keys array
 
 init_colors
 load_parms
-update
+update ${keys[1]} #: send scanner count hotkey to populate statrup dish args
 main "$@"
 
 ####!!!  nice tricks ----------------------------------------------------------------
