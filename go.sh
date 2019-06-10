@@ -573,7 +573,7 @@ while [ "$stay_TF" = "true" ]
 			#: make light marker next to dish
 			if [[ $LIGHTS = "on" ]]
 			then
-				if [[ ${subs[$i]} = "_dish" ]]
+				if [[ ${keys[$i]} = "d" ]]
 				then
 					marker="blip"
 				fi
