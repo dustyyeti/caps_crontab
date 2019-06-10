@@ -560,7 +560,7 @@ saveit (){
 	done
 	for light in "${largs[@]}"
 	do
-	   echo "${light}=${!light}" >> $EP/$EXP.exp
+	   echo "${largs}=${!largs}" >> $EP/$EXP.exp
 	done
 	echo
 	echo -e  ${BRed}${Inv} Make sure scanners are connected and powered. ${NC}
