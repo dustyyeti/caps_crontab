@@ -57,6 +57,7 @@ declare -a func
 declare -a opts
 declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
 declare -a trueopts
+declare -a lprog
 
 keys=(e s i r z x l a f o)
 mkeys=(F Q)
@@ -180,7 +181,7 @@ eatinput (){
 			IFS="/"
 			subz=1
 			set -- "${subvals[$i]}" 
-			local -a svals=($*)
+			local -a svals=($*) #: setting svals array for substituting in final args
 			unset IFS
 			;;
 		"T")			#: TOGGLE
@@ -218,7 +219,7 @@ eatinput (){
 				if [[ ${thisopt[$q]} = *$k* ]] #: if key occurs in the valid set
 				then
 					uvalue=${svals[$q]} #: user; index matching key stroke
-					if [[ ${uvalue: -1} = ^ ]] #: add the key pressed to the final ARG string
+					if [[ ${uvalue: -1} = ^ ]] #: add the key pressed to the final ARG string (exp-groupX)
 					then
 						uvalue=${uvalue::-1}$k
 					fi
@@ -290,8 +291,7 @@ menukeys (){
 eatkeys (){ #: digest user key inputs
 	# echo "(------eatkeys function-----)"; #-- TRACER
 	# echo key: $key #-- TRACER
-
-
+	dindex=0
 	if [[ $key = "" ]] #enter
 	then
 		echo no change
@@ -315,20 +315,29 @@ eatkeys (){ #: digest user key inputs
 			echo if key = ${keys[6]}, go to update
 			echo value: ${!args[6]}
 			update ${keys[6]}
-
 		fi
 		storelongest
 		return
 	fi # end toggles
 	size=$((${#opts[$i]}+2))
-
 	printf "%$((34-$size))s" "${blurbs[$i]} ["
 	echo -e "${Cyan}${Italic}${opts[$i]:2}${NC}] > \c"
 	eatinput
 	cols[$i]=$xcolor
+	if [[ ${keys[$i]} = "d" ]]
+	then
+		lightsprogram
+	fi
 	update $key #: run update to check for changes to the arrays (eg scanner count change)
 } #. end eatkeys()
 
+lightsprogram (){
+	thing="blue"
+	echo heyyyyyyy; sleep 1
+	lprog[dindex]="$thing"
+	echo ${lprog[dindex]}
+	((dindex++))
+}
 init_colors (){
 	##: use loop to setup initial colors
 	for ((i=0;i<${#keys[@]};i++))
@@ -399,9 +408,15 @@ update (){
 			insert cols $(( ini )) "$LtBlue"
 			insert trueopts $(( ini )) ""
 			insert subvals $(( ini )) ""
+
+			#: dish specific
 			for ((j=1;j<$(( dish_cnt+1 ));j++))
 			do
 				inj=$((ini+j))
+				lj=$(($j*$ix-1))
+				insert largs $(( lj )) "L$lj"
+				insert lprog $(( lj )) "boo"
+
 				insert args $(( inj )) "DISH${ix}_${j}"
 				insert keys $(( inj )) d
 				insert blurbs $(( inj )) "S${ix} Dish${j}"
@@ -506,6 +521,10 @@ saveit (){
 	do
 	   echo "${arg}=${!arg}" >> $EP/$EXP.exp
 	done
+	for light in "${lprog[@]}"
+	do
+	   echo "${light}=${!light}" >> $EP/$EXP.exp
+	done
 	echo
 	echo -e  ${BRed}${Inv} Make sure scanners are connected and powered. ${NC}
 	echo
@@ -547,6 +566,7 @@ while [ "$stay_TF" = "true" ]
 		printf " CREATE NEW CRONTAB EXPERIMENT "
 		echo
 		isub=0
+		dindex=0
 		for ((i=0;i<${#keys[@]};i++))
 		do
 			#: if this is a new subsection, then echo section heading from array
@@ -566,20 +586,19 @@ while [ "$stay_TF" = "true" ]
 			echo -e "${Cyan}${keys[$i]}${NC}] \c"
 			# echo -e 
 			echo -e "${cols[$i]}\c"
+
+			#: determine offset spacing for light color marker
 			arg=${!args[$i]}
 			arglen=${#arg}
 			push=$(($margin-arglen))
-
-			#: make light marker next to dish
-			if [[ $LIGHTS = "on" ]]
+			if [[ ${keys[$i]} = "d" ]]
 			then
-				if [[ ${keys[$i]} = "d" ]]
-				then
-					marker="blip"
-				fi
+				lp=${lprog[dindex]} #:light program setting as stirng
+				((dindex))
+			else
+				lp=""
 			fi
-
-			printf "%1s %${push}s" "$arg" $marker
+			printf "%1s %${push}s" "$arg" "$lp"
 			echo -e ${NC}
 			if [[ $LIGHTS = "on" ]]
 			then
