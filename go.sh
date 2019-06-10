@@ -55,7 +55,8 @@ declare -a opts
 declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
 declare -a trueopts
 
-keys=(e s i r z x l a p o f q)
+keys=(e s i r z x l a p o)
+mkeys=(f q)
 
 opts+=("*")
 opts+=("C/1..9")
@@ -113,8 +114,9 @@ blurbs+=("* use lights")
 blurbs+=("test animals")
 blurbs+=("food sources")
 blurbs+=("note other setup")
-blurbs+=("Load from file")
-blurbs+=("QUIT program")
+
+mblurbs+=("Load from file")
+mblurbs+=("QUIT program")
 
 subs+=("_exp")
 subs+=("_exp")
@@ -126,8 +128,8 @@ subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
 subs+=("_exp")
-subs+=("_menu")
-subs+=("_menu")
+# subs+=("_menu")
+# subs+=("_menu")
 
 
 
