@@ -19,6 +19,9 @@ Purple='\033[0;35m'       # Purple
 Cyan='\033[0;36m'         # Cyan
 White='\033[0;37m'        # White
 
+#. Underline
+UCyan='\033[4;36m'
+
 #. Bold Colors
 BBlack='\033[1;30m'       # Black
 BRed='\033[1;31m'         # Red
@@ -55,8 +58,8 @@ declare -a opts
 declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
 declare -a trueopts
 
-keys=(e s i r z x l a p o)
-mkeys=(f q)
+keys=(e s i r z x l a f o)
+mkeys=(F Q)
 
 opts+=("*/...")
 opts+=("C/1..9")
@@ -207,7 +210,7 @@ eatinput (){
 			read -s -n 1 k 
 			if [[ $k = "" ]]
 			then
-				echo -e "${Yellow}${Italic}no change${NC}"
+				echo -e ${Yellow}${Italic}no change${NC}
 				xcolor=${cols[$i]}
 				return
 			fi
@@ -230,12 +233,24 @@ eatinput (){
 				fi
 			done
 		else #: not a single key trigger
+			local former=${!args[$i]}
+			xcolor=${cols[$i]}
 			read ${args[$i]}
 			limit=-1
-		fi #: end of secret
+			#user sent empty string, replace with former
+			if [[ ${!args[$i]} = "" && ${args[$i]} != $former ]] 
+			then
+				eval ${args[$i]}=$former
+				printf "%34s" " "
+				echo -e "${Yellow}${Italic}no change${NC}"; sleep 1
+			else
+				xcolor=${Green}
+			fi
+			return
+		fi #: end of IF secret
 
 		##: loop through single key inputs, add to cumulative array
-		#! temp disable,
+		#? will we need this? uncertain
 
 		# if [[ ${opt[*]} =~ $k ]]
 		# then
@@ -245,9 +260,6 @@ eatinput (){
 		# 	a=a
 		# fi
 	done #: character input limit hit, or enter key
-
-	#!! need enter key exit still
-	#!! readkey must be -n 1 for this to work
 	if [[ $subz -eq 1 ]] #- temporary
 	then
 		eval "${args[$i]}"="$uvalue" #: set the EXP variables
@@ -265,7 +277,7 @@ eatkeys (){ #: digest user key inputs
 	# echo "(------eatkeys function-----)"; #-- TRACER
 	# echo key: $key #-- TRACER
 
-	if [[ $key = "q" ]]
+	if [[ $key = "Q" ]]
 	then
 		echo -e ${Red}
 		printf "%32s" "q again to quit > "
@@ -433,23 +445,11 @@ update (){
 	fi
 	return	# "^ ^ ^ ^ end update function ^ ^ ^ ^"
 }
-
 cronit (){
-	EROOT=${SP}/exp/
-	EP=$EROOT${EXP}
-	if [ ! -d "$EP" ]; then
-	    mkdir -p $EP
-	fi
-	#: write out $EXP.exp and last.exp record files
-	echo "writing $EXP.exp:"
-	echo "#exp parameters" 2>&1 | tee $EROOT/last.exp
-	for arg in "${args[@]}"
-	do
-	   echo "${arg}=${!arg}" >> $EROOT/last.exp
-	done
-	cp $EROOT/last.exp $EP/$EXP.exp
+	cp $EP/$EXP.exp $EROOT/last.exp
+
+
 	echo 
-	echo "working with Directory $EP"
 	echo -n "# programatic crontab file generated for CAPS scanner control
 	# " > $EP/xtab
 	printf '.%.0s' {1..29} >> $EP/xtab
@@ -482,18 +482,40 @@ cronit (){
 	echo
 	echo "xtab exported"
 	echo
-	echo -e "${BRed} install crontab and begin scanning (y/n)${NC}"
-	read -r response
+	echo "installing crontab..."
+	echo
+	echo "--scanning enabled"
+	crontab $EP/xtab
+	exit
+}
+saveit (){
+	EROOT=${SP}/exp/
+	EP=$EROOT${EXP}
+	if [ ! -d "$EP" ]; then
+	    mkdir -p $EP
+	fi
+	#: write out $EXP.exp and last.exp record files
+	echo "working with Directory $EP"
+	echo "writing $EXP.exp"
+	echo "#exp parameters" 2>&1 | tee $EP/$EXP.exp
+	for arg in "${args[@]}"
+	do
+	   echo "${arg}=${!arg}" >> $EP/$EXP.exp
+	done
+
+	echo
+	echo -e  ${BRed}${Inv} Make sure scanners are connected and powered. ${NC}
+	echo
+	
+	echo -e "${BRed} install crontab and begin scanning (y/n)${NC}\c"
+	read -s -r -n 1 response
 	response=${response,,}    # tolower
 	if [[ "$response" =~ ^(yes|y)$ ]]
 	then
-		echo
-		echo "installing crontab..."
-		echo
-		echo "--scanning enabled"
-		echo -e ${Red}${Inv} Make sure scanners are connected and powered.${NC}
-		crontab $EP/xtab
+		cronit
 	fi
+
+
 }
 
 main (){
@@ -533,24 +555,23 @@ while [ "$stay_TF" = "true" ]
 		for ((i=0;i<${#mkeys[@]};i++))
 		do
 			printf "%29s" "${mblurbs[$i]} ["
-			echo -e ${Cyan}${mkeys[$i]}${NC}"]"
+			echo -e ${UCyan}${mkeys[$i]}${NC}"]"
 		done
 
 		echo -e "\n"
 		printf "%27s" "set new parameters with ["
-		echo -e ${Cyan}${Italic}"key"${NC}"]" 
-		printf "%25s" "start program ["
-		echo -e ${Cyan}${Italic}"enter"${NC}"]" 
+		echo -e ${BCyan}${Italic}"key"${NC}"]" 
+		printf "%29s" "save program ["
+		echo -e ${Cyan}${UCyan}"S"${NC}"]" 
 		echo
 
 ##. USER INPUT
 		printf "%34s" "choice > "
 		read -n 1 key
 		echo
-		if [[ $key = "" ]] #: enter key runs cronit function, then exits
+		if [[ $key = 'S' ]] #: enter key runs cronit function, then exits
 		then
-			cronit
-			exit
+			saveit
 		fi
 		for ((i=0;i<${#keys[@]};i++)) #: find all instances of the hotkey
 		do
