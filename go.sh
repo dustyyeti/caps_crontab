@@ -57,7 +57,7 @@ declare -a func
 declare -a opts
 declare -a subvals #: the value to store in the associated EXP ARG, if different than user input
 declare -a trueopts
-declare -a lprog
+# declare -a lprog
 
 keys=(e s i r z x l a f o)
 mkeys=(F Q)
@@ -326,17 +326,40 @@ eatkeys (){ #: digest user key inputs
 	cols[$i]=$xcolor
 	if [[ ${keys[$i]} = "d" ]]
 	then
-		lightsprogram
+		program_lights
 	fi
 	update $key #: run update to check for changes to the arrays (eg scanner count change)
 } #. end eatkeys()
 
-lightsprogram (){
-	thing="blue"
-	echo heyyyyyyy; sleep 1
-	lprog[dindex]="$thing"
-	echo ${lprog[dindex]}
-	((dindex++))
+program_lights (){
+	echo lj $lj
+	echo "(----------program_lights ()---------)" #-- TRACER
+# 	local temp=
+# 	local program=
+# 	case $op in
+# 	"C")			#: CHOICE
+# 		IFS="/"
+# 		subz=1
+# 		set -- "${subvals[$i]}" 
+# 		local -a svals=($*) #: setting svals array for substituting in final args
+# 		unset IFS
+# 		;;
+# 	"T")			#: TOGGLE
+# 		a=a
+
+# 		;;
+# 	"I")			#: TOGGLE
+# 		secret=0
+# 		;;			
+# 	"*")
+# 		limit=30 #: arbitray high limit for string entry
+# 		secret=0
+# 		;;
+# 	*)
+# 		;;
+# esac
+	val="x$lj"
+	eval ${largs[$lj]}=$val
 }
 init_colors (){
 	##: use loop to setup initial colors
@@ -412,10 +435,18 @@ update (){
 			#: dish specific
 			for ((j=1;j<$(( dish_cnt+1 ));j++))
 			do
+				if [[ $j -eq 1 && $ix -eq 1 ]] #: first dish (numeric)
+				then
+					lj=0 #: light j(index) reset
+					lset="L0"
+				else
+					((lj++))
+					lset="L$lj"
+				fi
+
 				inj=$((ini+j))
-				lj=$(($j*$ix-1))
-				insert largs $(( lj )) "L$lj"
-				insert lprog $(( lj )) "boo"
+				insert largs $(( lj )) "$lset"
+				
 
 				insert args $(( inj )) "DISH${ix}_${j}"
 				insert keys $(( inj )) d
@@ -425,6 +456,11 @@ update (){
 				insert cols $(( inj )) "$LtBlue"
 				insert subvals $(( inj )) "C/neg-control/pos-control/exp-group^"
 				insert trueopts $(( inj )) "C/-/=/123456789"
+
+				program_lights
+
+
+				
 			done
 		done
 	fi
@@ -462,6 +498,7 @@ update (){
 		fi
 		i=999
 	fi
+	# program_lights
 	return	# "^ ^ ^ ^ end update function ^ ^ ^ ^"
 }
 cronit (){
@@ -521,7 +558,7 @@ saveit (){
 	do
 	   echo "${arg}=${!arg}" >> $EP/$EXP.exp
 	done
-	for light in "${lprog[@]}"
+	for light in "${largs[@]}"
 	do
 	   echo "${light}=${!light}" >> $EP/$EXP.exp
 	done
@@ -553,6 +590,15 @@ storelongest (){
 	margin=$(($buff+$longest))
 }
 
+findi (){
+	for q in "${!my_array[@]}"
+	do
+	   if [[ "${my_array[$q]}" = "${1}" ]]
+	   then
+	       return
+	   fi
+	done
+}
 main (){
 #: main looop --------------------------------------------
 # echo "(------MAIN MAIN MAIN -----)"; sleep 1 #-- TRACER
@@ -593,8 +639,9 @@ while [ "$stay_TF" = "true" ]
 			push=$(($margin-arglen))
 			if [[ ${keys[$i]} = "d" ]]
 			then
-				lp=${lprog[dindex]} #:light program setting as stirng
-				((dindex))
+				# echo dindex $dindex; sleep 1
+				lp=${!largs[$dindex]} #:light program setting as stirng		
+				((dindex++))
 			else
 				lp=""
 			fi
