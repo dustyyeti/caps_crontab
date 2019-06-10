@@ -487,7 +487,7 @@ update (){
 		then
 			ink=${#args[@]}
 			insert args $(( ink )) "PROGRAM"
-			insert keys $(( ink )) P
+			insert keys $(( ink )) L
 			insert blurbs $(( ink )) "Light Program"
 			insert subs $(( ink )) "_light"
 			insert opts $(( ink )) "C/b"
@@ -496,7 +496,7 @@ update (){
 			insert trueopts $(( ink )) "C/b"
 			insert subblurbs 2 "${BCyan}${Inv}____Neopixel Light Program_____${NC}"
 		fi
-		i=999
+		# i=999
 	fi
 	# program_lights
 	return	# "^ ^ ^ ^ end update function ^ ^ ^ ^"
@@ -558,9 +558,9 @@ saveit (){
 	do
 	   echo "${arg}=${!arg}" >> $EP/$EXP.exp
 	done
-	for light in "${largs[@]}"
+	for larg in "${largs[@]}"
 	do
-	   echo "${largs}=${!largs}" >> $EP/$EXP.exp
+	   echo "${larg}=${!larg}" >> $EP/$EXP.exp
 	done
 	echo
 	echo -e  ${BRed}${Inv} Make sure scanners are connected and powered. ${NC}
@@ -691,7 +691,7 @@ while [ "$stay_TF" = "true" ]
 		for ((i=0;i<${#keys[@]};i++)) #: find all instances of the hotkey
 		do
 			# echo i=$i, for lKeys loop #-- TRACER
-			if [[ ${keys[$i]} = $key ]]
+			if [[ ${keys[$i]} = $key || ${keys[$i]} = "${key^}" ]]
 			then
 				eatkeys #: send the index of the key from allowable options to process
 			fi
