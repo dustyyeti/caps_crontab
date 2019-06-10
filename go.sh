@@ -134,8 +134,7 @@ subs+=("_menu")
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
 subblurbs+=("${On_IBlack}___________Dish Setup__________${NC}")
 subblurbs+=("${BPurple}`printf '=%.0s' {1..31}`${NC}\c")
-# subblurbs+=("${Yellow}menu${NC}")
-subblurbs+=("${BCyan}${Inv}____Neopixel Light Program_____${NC}")
+
 
 ##. flow booleans
 stay_TF=true
@@ -265,8 +264,8 @@ eatinput (){
 }
 eatkeys (){ #: digest user key inputs
 	echo "(------eatkeys function-----)"; #-- TRACER
-	echo key: $key; sleep 1 #-- TRACER
-	bob=0
+	echo key: $key #-- TRACER
+
 	if [[ $key = "q" ]]
 	then
 		# printf "%32s" "${blurbs[$i]} [${opts[$i]}] > "
@@ -300,7 +299,7 @@ eatkeys (){ #: digest user key inputs
 		cols[$i]=${Green}
 		if [[ $key = ${keys[6]} ]] #: lights have toggled
 		then
-			echo if key = ${keys[6]}, go to update; sleep 1
+			echo if key = ${keys[6]}, go to update
 			echo value: ${!args[6]}
 			update ${keys[6]}
 
@@ -384,13 +383,13 @@ eatkeys (){ #: digest user key inputs
 	cols[$i]=$xcolor
 
 	echo "^ ^ ^ ^ end eatkeys function ^ ^ ^ ^"
-	# echo then send to update; sleep 2
+	# echo then send to update
 	update $key #: run update to check for changes to the arrays (eg scanner count change)
 } #. end eatkeys()
 
 init_colors (){
 ### use loop to setup initial colors
-	for ((i=0;i<lKeys;i++))
+	for ((i=0;i<${#keys[@]};i++))
 	do
 		cols+=($LtBlue)
 	done
@@ -407,34 +406,41 @@ load_parms (){
 }
 
 update (){
-	echo "(------update function-----)"; sleep 0 #-- TRACER
+	echo "(------update function-----)" #-- TRACER
 	echo parm: $1 #-- TRACER
+
+	#: dish (scanner) related ----------------------------------------
 	if [[ remember_scanners -ne SCANNERS && $1 = ${keys[1]} ]] #: number of scanners has changed
+	
 	#: delete all args related to old scanner count
 	then
-		local i j ins ini inj
+		local ix j ins ini inj
 		local ins=10 #: insert point in arrays (index padding)
 		local xindex=$((remember_scanners*dish_cnt+remember_scanners))
+
 		#: hunt down dish entries and remove them
-		for ((i=((lKeys-1));i>0;i--)) #((i=0;i<lKeys;i++))
+		for ((ix=((${#keys[@]}-1));ix>0;ix--)) #((ix=0;ix<lKeys;ix++))
 		do
-			if [[ ${subs[$i]} = "_dish" ]]
+			if [[ ${subs[$ix]} = "_dish" ]]
 			then
-				unset args[$i]
-				unset blurbs[$i]
-				unset keys[$i]
-				unset subs[$i]	
-				unset opts[$i]
-				unset types[$i]
+				unset args[$ix]
+				unset blurbs[$ix]
+				unset keys[$ix]
+				unset subs[$ix]	
+				unset opts[$ix]
+				unset trueopts[$ix]
+				unset cols[$ix]
+				unset subvals[$ix]
 			fi
 		done
 		remember_scanners=$SCANNERS #: reset scanner count memory
-		### insert args based on startup settings
-		for ((i=1;i<$(( SCANNERS+1 ));i++)) #: add features related to scanner/multiple
+
+		#: insert args based on startup settings, or scanner count updates......................
+		for ((ix=1;ix<$(( SCANNERS+1 ));ix++)) #: add features related to scanner/multiple
 		do
-			ini=$((ins+((i-1))*2+((i-1))*dish_cnt))
-			insert args $(( ini )) SCANNER${i}_ID
-			insert blurbs $(( ini )) "Scanner${i} ID"
+			ini=$((ins+((ix-1))*2+((ix-1))*dish_cnt))
+			insert args $(( ini )) SCANNER${ix}_ID
+			insert blurbs $(( ini )) "Scanner${ix} ID"
 			insert keys $(( ini )) k
 			insert subs $(( ini )) "_dish"
 			insert opts $(( ini )) "*"
@@ -443,8 +449,8 @@ update (){
 			insert subvals $(( ini )) ""
 
 			((ini++))
-			insert args $(( ini )) TEMPLATE${i}_ID
-			insert blurbs $(( ini )) "Template${i} ID"
+			insert args $(( ini )) TEMPLATE${ix}_ID
+			insert blurbs $(( ini )) "Template${ix} ID"
 			insert keys $(( ini )) t
 			insert subs $(( ini )) "_dish"
 			insert opts $(( ini )) "*"
@@ -455,9 +461,9 @@ update (){
 			do
 				#! FORMAT for MATH: a=$(( 4 + 5 ))
 				inj=$((ini+j))
-				insert args $(( inj )) "DISH${i}_${j}"
+				insert args $(( inj )) "DISH${ix}_${j}"
 				insert keys $(( inj )) d
-				insert blurbs $(( inj )) "S${i} Dish${j}"
+				insert blurbs $(( inj )) "S${ix} Dish${j}"
 				insert subs $(( inj )) "_dish"
 				insert opts $(( inj )) "C/-/=/1..9"
 				insert cols $(( inj )) "$LtBlue"
@@ -466,24 +472,31 @@ update (){
 			done
 		done
 	fi
+
+	#: insert args based on startup settings, or light feature toggle..................
 	if [[ $1 = ${keys[6]} ]]
 	then
-		#: hunt down dish entries and remove them
-		# for ((i=((lKeys-1));i>0;i--)) #((i=0;i<lKeys;i++))
-		# do
-		# 	if [[ ${subs[$i]} = "_light" ]]
-		# 	then
-		# 		unset args[$i]
-		# 		unset blurbs[$i]
-		# 		unset keys[$i]
-		# 		unset subs[$i]	
-		# 		unset opts[$i]
-		# 		unset types[$i]
-		# 	fi
-		# done
-		if [[ ${args[6]} = "on" ]]
+		#: hunt down light entries and remove them
+		echo in the loop......................
+		echo look: ${args[6]}
+		for ((ix=((${#keys[@]}-1));ix>0;ix--)) #((ix=0;ix<lKeys;ix++))
+		do
+			if [[ ${subs[$ix]} = "_light" ]]
+			then
+				unset args[$ix]
+				unset blurbs[$ix]
+				unset keys[$ix]
+				unset subs[$ix]	
+				unset opts[$ix]
+				unset types[$ix]
+				unset trueopts[$ix]
+				unset subblurbs[2]
+			fi
+		done
+		if [[ ${!args[6]} = "on" ]]
 		then
 			ink=${#args[@]}
+			echo ink $ink
 			insert args $(( ink )) "PROGRAM"
 			insert keys $(( ink )) P
 			insert blurbs $(( ink )) "Light Program"
@@ -492,9 +505,14 @@ update (){
 			insert cols $(( ink )) "$LtBlue"
 			insert subvals $(( ink )) "C/constant-blue"
 			insert trueopts $(( ink )) "C/b"
+			insert subblurbs 2 "${BCyan}${Inv}____Neopixel Light Program_____${NC}"
 		fi
+		i=999
+		echo ${args[@]}
+		echo ${keys[@]}
+		read -n 1
 	fi
-	echo "^ ^ ^ ^ end update function ^ ^ ^ ^"; sleep 0
+	echo "^ ^ ^ ^ end update function ^ ^ ^ ^"
 	return
 }
 
@@ -519,7 +537,7 @@ cronit (){
 	# " > $EP/xtab
 	printf '.%.0s' {1..29} >> $EP/xtab
 	echo >> $EP/xtab
-	for ((i=0;i<lKeys;i++))
+	for ((i=0;i<${#keys[@]};i++))
 	do
 		echo -n "#" >> $EP/xtab
 		printf "%31s" "${blurbs[$i]}: " >> $EP/xtab
@@ -558,15 +576,14 @@ echo "(------MAIN MAIN MAIN -----)"; sleep 1 #-- TRACER
 while [ "$stay_TF" = "true" ]
 	echo inside the while loop
 
-	lKeys=${#keys[@]} #: establish length of keys array
+	#: BUILD UI MENU-----------------------------------------
 	do
-		
-		# clear #!! temp disable for TRACER
+		clear #!! temp disable for TRACER
 		echo -e "${BPurple}"
 		printf " CREATE NEW CRONTAB EXPERIMENT "
 		echo
 		isub=0
-		for ((i=0;i<lKeys;i++))
+		for ((i=0;i<${#keys[@]};i++))
 		do
 			#: if this is a new subsection, then echo section heading from array
 			if [[ $buf != ${subs[$i]} ]] 
@@ -593,6 +610,7 @@ while [ "$stay_TF" = "true" ]
 
 ##. USER INPUT
 		printf "%34s" "choice > "
+		echo key length: ${#keys[@]}
 		read -n 1 key
 		echo
 		if [[ $key = "" ]] #: enter key runs cronit function, then exits
@@ -600,7 +618,7 @@ while [ "$stay_TF" = "true" ]
 			cronit
 			exit
 		fi
-		for ((i=0;i<lKeys;i++)) #: find all instances of the hotkey
+		for ((i=0;i<${#keys[@]};i++)) #: find all instances of the hotkey
 		do
 			# echo i=$i, for lKeys loop #-- TRACER
 			if [[ ${keys[$i]} = $key ]]
@@ -615,8 +633,6 @@ while [ "$stay_TF" = "true" ]
 	# sleep 1 #@ this is for debug
 	done #: END WHILE stay_TF LOOP
 } #......................................... end main
-
-lKeys=${#keys[@]} #: establish length of keys array
 
 init_colors
 load_parms

@@ -1,5 +1,4 @@
 #exp parameters
-PROGRAM=
 EXP=foo
 SCANNERS=2
 INT=5
