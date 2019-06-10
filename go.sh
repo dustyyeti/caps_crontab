@@ -139,12 +139,8 @@ subs+=("_exp")
 subblurbs+=("${Inv}_____Experiment Parameters_____${NC} [${Red} WARNING${NC} | ${LtBlue}LAST EXP${NC} | ${Green}new value${NC} ]")
 subblurbs+=("${On_IBlack}___________Dish Setup__________${NC}")
 
-
-
 ##. flow booleans
 stay_TF=true
-
-
 
 insert(){
     local i
@@ -167,6 +163,7 @@ spacer (){ #: helps with UI building
 	# printf '.%.0s' {1..31} #....................
 	echo
 }
+
 eatinput (){
 	# echo eatinput function
 	local -a thisopt
@@ -246,6 +243,7 @@ eatinput (){
 			else
 				xcolor=${Green}
 			fi
+			storelongest
 			return
 		fi #: end of IF secret
 
@@ -270,6 +268,7 @@ eatinput (){
 	else
 		xcolor=${Green}
 	fi
+	storelongest
 	# echo "limit reached" #-- TRACER
 }
 
@@ -286,8 +285,8 @@ menukeys (){
 			return
 		fi
 	fi
-
 }
+
 eatkeys (){ #: digest user key inputs
 	# echo "(------eatkeys function-----)"; #-- TRACER
 	# echo key: $key #-- TRACER
@@ -318,6 +317,7 @@ eatkeys (){ #: digest user key inputs
 			update ${keys[6]}
 
 		fi
+		storelongest
 		return
 	fi # end toggles
 	size=$((${#opts[$i]}+2))
@@ -506,11 +506,9 @@ saveit (){
 	do
 	   echo "${arg}=${!arg}" >> $EP/$EXP.exp
 	done
-
 	echo
 	echo -e  ${BRed}${Inv} Make sure scanners are connected and powered. ${NC}
 	echo
-	
 	echo -e "${BRed} install crontab and begin scanning (y/n)${NC}\c"
 	read -s -r -n 1 response
 	response=${response,,}    # tolower
@@ -518,8 +516,22 @@ saveit (){
 	then
 		cronit
 	fi
+}
 
-
+storelongest (){
+	local ix
+	local buff=5
+	longest=0
+	for ((ix=0;ix<${#args[@]};ix++))
+	do
+		temp=${!args[$ix]}
+		comp=${#temp}
+		if [[ $comp -gt $longest && ${subs[$ix]} = "_dish" ]]
+		then
+			longest=$comp
+		fi
+	done
+	margin=$(($buff+$longest))
 }
 
 main (){
@@ -528,7 +540,7 @@ main (){
 while [ "$stay_TF" = "true" ]
 	echo inside the while loop
 
-	#: BUILD UI MENU-----------------------------------------
+		#: BUILD UI MENU-----------------------------------------
 	do
 		clear #!! temp disable for TRACER
 		echo -e "${BPurple}"
@@ -538,6 +550,7 @@ while [ "$stay_TF" = "true" ]
 		for ((i=0;i<${#keys[@]};i++))
 		do
 			#: if this is a new subsection, then echo section heading from array
+			marker=""
 			if [[ $buf != ${subs[$i]} ]] 
 			then
 				buf=${subs[$i]} #: store the subsection in buf
@@ -550,7 +563,31 @@ while [ "$stay_TF" = "true" ]
 				fi
 			fi
 			printf "%29s" "${blurbs[$i]} ["
-			echo -e ${Cyan}${keys[$i]}${NC}"] "${cols[$i]}${!args[$i]}${NC}
+			echo -e "${Cyan}${keys[$i]}${NC}] \c"
+			# echo -e 
+			echo -e "${cols[$i]}\c"
+			arg=${!args[$i]}
+			arglen=${#arg}
+			push=$(($margin-arglen))
+
+			#: make light marker next to dish
+			if [[ $LIGHTS = "on" ]]
+			then
+				if [[ ${subs[$i]} = "_dish" ]]
+				then
+					marker="blip"
+				fi
+			fi
+
+			printf "%1s %${push}s" "$arg" $marker
+			echo -e ${NC}
+			if [[ $LIGHTS = "on" ]]
+			then
+				# column "on"
+				# printf "%10s" "on"
+				# echo
+				a=a
+			fi
 		done
 
 		#: add menu subsection at last position
@@ -601,4 +638,6 @@ while [ "$stay_TF" = "true" ]
 init_colors
 load_parms
 update ${keys[1]} #: send scanner count hotkey to populate statrup dish args
+update ${keys[6]} #: now for lights, if on
+storelongest
 main "$@"
