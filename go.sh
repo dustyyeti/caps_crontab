@@ -271,12 +271,9 @@ eatinput (){
 		xcolor=${Green}
 	fi
 	# echo "limit reached" #-- TRACER
-
 }
-eatkeys (){ #: digest user key inputs
-	# echo "(------eatkeys function-----)"; #-- TRACER
-	# echo key: $key #-- TRACER
 
+menukeys (){
 	if [[ $key = "Q" ]]
 	then
 		echo -e ${Red}
@@ -289,6 +286,13 @@ eatkeys (){ #: digest user key inputs
 			return
 		fi
 	fi
+
+}
+eatkeys (){ #: digest user key inputs
+	# echo "(------eatkeys function-----)"; #-- TRACER
+	# echo key: $key #-- TRACER
+
+
 	if [[ $key = "" ]] #enter
 	then
 		echo no change
@@ -569,10 +573,18 @@ while [ "$stay_TF" = "true" ]
 		printf "%34s" "choice > "
 		read -n 1 key
 		echo
+
 		if [[ $key = 'S' ]] #: enter key runs cronit function, then exits
 		then
 			saveit
 		fi
+		for ((i=0;i<${#mkeys[@]};i++)) #: find all instances of the hotkey in menuset
+		do
+			if [[ ${mkeys[$i]} = $key ]]
+			then
+				menukeys #: send the index of the key from allowable options to process
+			fi
+		done
 		for ((i=0;i<${#keys[@]};i++)) #: find all instances of the hotkey
 		do
 			# echo i=$i, for lKeys loop #-- TRACER
@@ -581,6 +593,7 @@ while [ "$stay_TF" = "true" ]
 				eatkeys #: send the index of the key from allowable options to process
 			fi
 		done
+
 	# sleep 1 #-- TRACER
 	done #: END WHILE stay_TF LOOP
 } #......................................... end main
