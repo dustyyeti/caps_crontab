@@ -312,8 +312,6 @@ eatkeys (){ #: digest user key inputs
 		cols[$i]=${Green}
 		if [[ $key = ${keys[6]} ]] #: lights have toggled
 		then
-			echo if key = ${keys[6]}, go to update
-			echo value: ${!args[6]}
 			update ${keys[6]}
 		fi
 		storelongest

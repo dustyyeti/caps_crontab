@@ -1,8 +1,8 @@
 #exp parameters
-EXP=floop
+EXP=
 SCANNERS=2
 INT=5
-RES=300
+RES=
 REF=off
 XFER=on
 LIGHTS=on
