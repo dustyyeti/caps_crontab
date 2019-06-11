@@ -666,13 +666,11 @@ while [ "$stay_TF" = "true" ]
 
 		echo -e "\n"
 		printf "%27s" "set new parameters with ["
-		echo -e ${BCyan}${Italic}"key"${NC}"]" 
+		echo -e ${BCyan}${Italic}"key"${NC}"] >" 
 		# printf "%29s" "save program ["
 		# echo -e ${Cyan}${UCyan}"S"${NC}"]" 
-		echo
 
 ##. USER INPUT
-		printf "%34s" "choice > "
 		read -n 1 key
 		echo
 
