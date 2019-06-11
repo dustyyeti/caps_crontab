@@ -60,7 +60,7 @@ declare -a trueopts
 # declare -a lprog
 
 keys=(e s i r z x l a f o)
-mkeys=(F Q)
+mkeys=(F S Q)
 
 opts+=("*/...")
 opts+=("C/1..9")
@@ -118,7 +118,8 @@ blurbs+=("food sources")
 blurbs+=("note other setup")
 
 #: menu blurbs
-mblurbs+=("Load from file")
+mblurbs+=("LOAD from file")
+mblurbs+=("SAVE program")
 mblurbs+=("QUIT program")
 
 #: subsections
@@ -666,8 +667,8 @@ while [ "$stay_TF" = "true" ]
 		echo -e "\n"
 		printf "%27s" "set new parameters with ["
 		echo -e ${BCyan}${Italic}"key"${NC}"]" 
-		printf "%29s" "save program ["
-		echo -e ${Cyan}${UCyan}"S"${NC}"]" 
+		# printf "%29s" "save program ["
+		# echo -e ${Cyan}${UCyan}"S"${NC}"]" 
 		echo
 
 ##. USER INPUT
