@@ -162,8 +162,7 @@ insert(){
 spacer (){ #: helps with UI building
 	echo
 	echo -e "${subblurbs[$isub]}"
-	# printf '.%.0s' {1..31} #....................
-	echo
+
 }
 
 eatinput (){
@@ -184,6 +183,7 @@ eatinput (){
 			set -- "${subvals[$i]}" 
 			local -a svals=($*) #: setting svals array for substituting in final args
 			unset IFS
+			# read -p "pause"
 			;;
 		"T")			#: TOGGLE
 			a=a
@@ -232,8 +232,8 @@ eatinput (){
 				fi
 			done
 		else #: not a single key trigger
-			local former=${!args[$i]}
-			xcolor=${cols[$i]}
+			local former='"'${!args[$i]}'"' #: quotes must be added to string in case of spaces
+			# xcolor=${cols[$i]}
 			read ${args[$i]}
 			limit=-1
 			#user sent empty string, replace with former
@@ -275,10 +275,23 @@ eatinput (){
 }
 
 menukeys (){
-	if [[ $key = "Q" ]]
-	then
+	case $key in
+	"S")			#: SAVE
+		for arg in ${args[@]}
+		do
+			arg=${!arg}
+			if [[ ${#arg} -lt 1 ]]
+			then
+				echo -e ${Red}
+				read -n 1 -p " Cannot save file with any blanks fields..."
+				main
+			fi
+		done
+		saveit
+		;;
+	"Q")			#: QUIT
 		echo -e ${Red}
-		printf "%32s" "q again to quit > "
+		printf "%32s" "q again to quit >"
 		read -n 1 key
 		if [[ $key = "q" ]]
 		then
@@ -286,7 +299,12 @@ menukeys (){
 		else
 			return
 		fi
-	fi
+		;;
+	*)
+		;;
+	esac
+
+
 }
 
 eatkeys (){ #: digest user key inputs
@@ -320,7 +338,7 @@ eatkeys (){ #: digest user key inputs
 	fi # end toggles
 	size=$((${#opts[$i]}+2))
 	printf "%$((34-$size))s" "${blurbs[$i]} ["
-	echo -e "${Cyan}${Italic}${opts[$i]:2}${NC}] > \c"
+	echo -e "${Cyan}${Italic}${opts[$i]:2}${NC}] >\c"
 	eatinput
 	cols[$i]=$xcolor
 	if [[ ${keys[$i]} = "d" ]]
@@ -331,8 +349,8 @@ eatkeys (){ #: digest user key inputs
 } #. end eatkeys()
 
 program_lights (){
-	echo lj $lj
-	echo "(----------program_lights ()---------)" #-- TRACER
+	# echo lj $lj
+	# echo "(----------program_lights ()---------)" #-- TRACER
 # 	local temp=
 # 	local program=
 # 	case $op in
@@ -405,6 +423,7 @@ update (){
 				unset cols[$ix]
 				unset subvals[$ix]
 			fi
+			unset largs[@]
 		done
 		remember_scanners=$SCANNERS #: reset scanner count memory
 
@@ -442,11 +461,8 @@ update (){
 					((lj++))
 					lset="L$lj"
 				fi
-
 				inj=$((ini+j))
 				insert largs $(( lj )) "$lset"
-				
-
 				insert args $(( inj )) "DISH${ix}_${j}"
 				insert keys $(( inj )) d
 				insert blurbs $(( inj )) "S${ix} Dish${j}"
@@ -455,11 +471,7 @@ update (){
 				insert cols $(( inj )) "$LtBlue"
 				insert subvals $(( inj )) "C/neg-control/pos-control/exp-group^"
 				insert trueopts $(( inj )) "C/-/=/123456789"
-
 				program_lights
-
-
-				
 			done
 		done
 	fi
@@ -555,11 +567,11 @@ saveit (){
 	echo "#exp parameters" 2>&1 | tee $EP/$EXP.exp
 	for arg in "${args[@]}"
 	do
-	   echo "${arg}=${!arg}" >> $EP/$EXP.exp
+	   echo ${arg}="'${!arg}'" >> $EP/$EXP.exp
 	done
 	for larg in "${largs[@]}"
 	do
-	   echo "${larg}=${!larg}" >> $EP/$EXP.exp
+	   echo ${larg}="'${!larg}'" >> $EP/$EXP.exp
 	done
 	echo
 	echo -e  ${BRed}${Inv} Make sure scanners are connected and powered. ${NC}
@@ -589,6 +601,33 @@ storelongest (){
 	margin=$(($buff+$longest))
 }
 
+set_all (){
+	#!!! NEED to get the $i index value for 
+
+	for ((i=0;i<${#keys[@]};i++))
+	do
+		if [[ ${blurbs[$i]:0:1} != "*" ]]
+		then
+			eatkeys
+		fi
+		if [[ $i -eq 1 ]]
+		then
+			update ${keys[1]}
+		fi
+		if [[ $i -eq 6 ]]
+		then
+			update ${keys[6]}
+		fi
+	done
+	# uniq=($(printf "%s\n" "${keys[@]}" | uniq))
+	# # echo $uniq[@]
+	# for key in ${uniq[@]}
+	# do
+	# 	echo $key
+	# 	eatkeys
+	# done
+}
+
 findi (){
 	for q in "${!my_array[@]}"
 	do
@@ -615,7 +654,6 @@ while [ "$stay_TF" = "true" ]
 		for ((i=0;i<${#keys[@]};i++))
 		do
 			#: if this is a new subsection, then echo section heading from array
-			marker=""
 			if [[ $buf != ${subs[$i]} ]] 
 			then
 				buf=${subs[$i]} #: store the subsection in buf
@@ -666,18 +704,18 @@ while [ "$stay_TF" = "true" ]
 
 		echo -e "\n"
 		printf "%27s" "set new parameters with ["
-		echo -e ${BCyan}${Italic}"key"${NC}"] >" 
-		# printf "%29s" "save program ["
-		# echo -e ${Cyan}${UCyan}"S"${NC}"]" 
+		echo -e "${BCyan}${Italic}key${NC}]" 
+		printf "%29s" "set ALL with ["
+		echo -e "${BCyan}~${NC}] >\c" 
 
 ##. USER INPUT
 		read -n 1 key
 		echo
-
-		if [[ $key = 'S' ]] #: enter key runs cronit function, then exits
+		if [[ $key = '~' ]] #: enter key runs cronit function, then exits
 		then
-			saveit
+			set_all
 		fi
+
 		for ((i=0;i<${#mkeys[@]};i++)) #: find all instances of the hotkey in menuset
 		do
 			if [[ ${mkeys[$i]} = $key ]]
